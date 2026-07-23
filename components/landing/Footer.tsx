@@ -220,9 +220,9 @@ const Footer = () => {
                 >
                     <p>© 2026 AMXINZ. All rights reserved.</p>
                     <nav className="flex gap-5" aria-label="Legal links">
-                        <Link href="/privacy">Privacy</Link>
-                        <Link href="/terms">Terms</Link>
-                        <Link href="/cookies">Cookies</Link>
+                        <Link href="/">Privacy</Link>
+                        <Link href="/">Terms</Link>
+                        <Link href="/">Cookies</Link>
                     </nav>
                 </motion.div>
             </div>
