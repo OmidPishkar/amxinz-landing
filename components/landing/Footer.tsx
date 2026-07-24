@@ -150,7 +150,7 @@ const Footer = () => {
                         </ul>
                     </motion.nav>
 
-                    {/* Resources (placeholder) */}
+                    {/* Resources */}
                     <motion.nav
                         aria-label="Resource links"
                         initial={{ opacity: 0, y: 20 }}
@@ -160,13 +160,12 @@ const Footer = () => {
                     >
                         <h4 className="mb-5 font-semibold">Resources</h4>
                         <ul className="space-y-3 text-sm">
-                            <li><Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">Documentation</Link></li>
-                            <li><Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">Privacy</Link></li>
-                            <li><Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">Terms</Link></li>
+                            <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy</Link></li>
+                            <li><Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms</Link></li>
                         </ul>
                     </motion.nav>
 
-                    {/* Stay Updated (same as waitlist) */}
+                    {/* Stay Updated */}
                     <motion.aside
                         aria-label="Stay updated"
                         initial={{ opacity: 0, x: 20 }}
@@ -220,9 +219,8 @@ const Footer = () => {
                 >
                     <p>© 2026 AMXINZ. All rights reserved.</p>
                     <nav className="flex gap-5" aria-label="Legal links">
-                        <Link href="/">Privacy</Link>
-                        <Link href="/">Terms</Link>
-                        <Link href="/">Cookies</Link>
+                        <Link href="/privacy">Privacy</Link>
+                        <Link href="/terms">Terms</Link>
                     </nav>
                 </motion.div>
             </div>

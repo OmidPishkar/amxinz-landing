@@ -7,24 +7,6 @@ import "@fontsource/plus-jakarta-sans/800.css";
 import "@fontsource/plus-jakarta-sans/800-italic.css";
 
 const Hero = () => {
-    const fullText = "The most transparent DEX trader ranking platform.\nAutomated journal, AI insights, and global competition.";
-    const [displayedText, setDisplayedText] = useState('');
-    const [typingIndex, setTypingIndex] = useState(0);
-    const [showCursor, setShowCursor] = useState(true);
-
-    useEffect(() => {
-        if (typingIndex < fullText.length) {
-            const timeout = setTimeout(() => {
-                setDisplayedText(prev => prev + fullText[typingIndex]);
-                setTypingIndex(typingIndex + 1);
-            }, 100);
-            return () => clearTimeout(timeout);
-        } else {
-            const cursorTimeout = setTimeout(() => setShowCursor(false), 2000);
-            return () => clearTimeout(cursorTimeout);
-        }
-    }, [typingIndex, fullText]);
-
     const scrollToWaitlist = () => {
         document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
     };
@@ -126,8 +108,8 @@ const Hero = () => {
                                 <p className="mt-1 text-sm text-muted-foreground">On-Chain Trades</p>
                             </li>
                             <li>
-                                <strong className="text-sm font-black tracking-wider text-secondary">Public Profile</strong>
-                                <p className="mt-1 text-sm text-muted-foreground">Verfied Resume</p>
+                                <strong className="text-sm font-black tracking-wider text-secondary">AI REVIEW</strong>
+                                <p className="mt-1 text-sm text-muted-foreground">Performance Analysis</p>
                             </li>
                             <li>
                                 <strong className="text-sm font-black tracking-wider text-green-400">REPUTATION</strong>

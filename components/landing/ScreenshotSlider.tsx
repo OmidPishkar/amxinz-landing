@@ -32,7 +32,15 @@ const slides = [
         description:
             'Climb the global leaderboard by trading with discipline. Your rank will be earned, never bought.',
         imageUrl: '/landing/ranking.png',
-    }
+    },
+    {
+        id: 4,
+        tag: 'Coming Soon',
+        title: 'Your Daily Discipline Score',
+        description:
+            'Every day you’ll receive a rating from 1 to 5 based on your risk management, consistency, and emotional control. No chat, just actionable feedback.',
+        imageUrl: '/landing/ai.png', // می‌توانید تصویر مرتبط با Daily Score جایگزین کنید
+    },
 ];
 
 export default function ScreenshotSlider() {
