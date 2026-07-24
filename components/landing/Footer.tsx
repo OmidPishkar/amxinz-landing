@@ -38,7 +38,7 @@ const Footer = () => {
             } else {
                 toast.error(data.message || 'Something went wrong');
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error('Network error');
         } finally {
             setSubmitting(false);
