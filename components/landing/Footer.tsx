@@ -79,7 +79,7 @@ const Footer = () => {
                     </h2>
 
                     <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-                        We're onboarding traders in batches. Secure your spot and get exclusive early access to the platform.
+                        We&rsquo;re onboarding traders in batches. Secure your spot and get exclusive early access to the platform.
                     </p>
 
                     {/* Waitlist Form */}
@@ -110,7 +110,7 @@ const Footer = () => {
                         </motion.button>
                     </motion.form>
                     {subscribed && (
-                        <p className="mt-4 text-sm text-green-400">You're on the list! We'll be in touch soon.</p>
+                        <p className="mt-4 text-sm text-green-400">You&rsquo;re on the list! We&rsquo;ll be in touch soon.</p>
                     )}
                 </motion.section>
 

@@ -1,10 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import "@fontsource/plus-jakarta-sans";
-import "@fontsource/plus-jakarta-sans/800.css";
-import "@fontsource/plus-jakarta-sans/800-italic.css";
 
 const Hero = () => {
     const scrollToWaitlist = () => {

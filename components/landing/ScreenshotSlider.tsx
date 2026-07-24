@@ -38,7 +38,7 @@ const slides = [
         tag: 'Coming Soon',
         title: 'Your Daily Discipline Score',
         description:
-            'Every day you’ll receive a rating from 1 to 5 based on your risk management, consistency, and emotional control. No chat, just actionable feedback.',
+            'Every day you&rsquo;ll receive a rating from 1 to 5 based on your risk management, consistency, and emotional control. No chat, just actionable feedback.',
         imageUrl: '/landing/ai.png', // می‌توانید تصویر مرتبط با Daily Score جایگزین کنید
     },
 ];
@@ -72,7 +72,7 @@ export default function ScreenshotSlider() {
                     </h2>
 
                     <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-                        We're crafting the tools to turn your on-chain history into your greatest asset. Here's a first look.
+                        We&rsquo;re crafting the tools to turn your on-chain history into your greatest asset. Here&rsquo;s a first look.
                     </p>
                 </motion.header>
 

@@ -1,19 +1,30 @@
 import mongoose from 'mongoose';
 
-// تعریف یک تایپ برای کش کردن اتصال (جلوگیری از ساخت اتصال تکراری در توسعه)
 const MONGODB_URI = process.env.MONGODB_URI!;
 
 if (!MONGODB_URI) {
-    throw new Error('لطفا متغیر MONGODB_URI را در فایل .env تعریف کنید');
+    throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
 }
 
-let cached = (global as any).mongoose;
-
-if (!cached) {
-    cached = (global as any).mongoose = { conn: null, promise: null };
+// تعریف interface برای شیء کش
+interface MongooseCache {
+    conn: typeof mongoose | null;
+    promise: Promise<typeof mongoose> | null;
 }
 
-async function connectDB() {
+// تعریف global برای جلوگیری از خطای TypeScript
+declare global {
+    // eslint-disable-next-line no-var
+    var mongooseCache: MongooseCache | undefined;
+}
+
+// مقداردهی اولیه کش
+const cached: MongooseCache = global.mongooseCache || { conn: null, promise: null };
+if (!global.mongooseCache) {
+    global.mongooseCache = cached;
+}
+
+async function connectDB(): Promise<typeof mongoose> {
     if (cached.conn) {
         return cached.conn;
     }
@@ -24,7 +35,6 @@ async function connectDB() {
         };
 
         cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-            console.log("✅ به مونوگودی‌بی وصل شدیم");
             return mongoose;
         });
     }
