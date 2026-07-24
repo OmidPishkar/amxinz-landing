@@ -83,7 +83,7 @@ export default function PrivacyPage() {
                 <ul className="list-disc pl-6 space-y-2">
                     <li><strong>Access:</strong> Request a copy of the data we hold about you.</li>
                     <li><strong>Rectification:</strong> Correct any inaccurate data.</li>
-                    <li><strong>Erasure:</strong> Request deletion of your data (the "right to be forgotten").</li>
+                    <li><strong>Erasure:</strong> Request deletion of your data (the &quot;right to be forgotten&quot;).</li>
                     <li><strong>Objection:</strong> Object to the processing of your data for direct marketing.</li>
                 </ul>
                 <p>
@@ -102,8 +102,8 @@ export default function PrivacyPage() {
                 <h2 className="text-2xl font-bold mt-10 mb-4">7. Changes to This Policy</h2>
                 <p>
                     We may update this Privacy Policy from time to time. We will notify you of any
-                    material changes by posting the new policy on this page and updating the "Last
-                    updated" date. For significant changes, we may also send an email notification.
+                    material changes by posting the new policy on this page and updating the &quot;Last
+                    updated&quot; date. For significant changes, we may also send an email notification.
                 </p>
 
                 <h2 className="text-2xl font-bold mt-10 mb-4">8. Contact Us</h2>
