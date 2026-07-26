@@ -9,7 +9,7 @@ import { Menu, X, ChevronDown, BookOpen, FileText, HelpCircle } from "lucide-rea
 export default function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [resourcesOpen, setResourcesOpen] = useState(false);
-    const resourcesRef = useRef<HTMLDivElement>(null);
+    const resourcesRef = useRef<HTMLLIElement>(null);
 
     // بستن دراپ‌داون Resources با کلیک بیرون
     useEffect(() => {
