@@ -82,6 +82,8 @@ export default function WhitepaperPage() {
             ?.scrollIntoView({ behavior: "smooth" });
     };
 
+    
+
     return (
         <>
             {/* ───── Hero ───── */}
@@ -293,19 +295,19 @@ export default function WhitepaperPage() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.4, delay: idx * 0.1 }}
                             className={`rounded-2xl border p-5 md:p-8 ${phase.status === "completed"
-                                    ? "border-emerald-400/20 bg-emerald-500/5"
-                                    : phase.status === "in‑progress"
-                                        ? "border-amber-400/20 bg-amber-500/5"
-                                        : "border-white/10 bg-white/[0.02]"
+                                ? "border-emerald-400/20 bg-emerald-500/5"
+                                : phase.status === "in‑progress"
+                                    ? "border-amber-400/20 bg-amber-500/5"
+                                    : "border-white/10 bg-white/[0.02]"
                                 }`}
                         >
                             <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-0">
                                 <span
                                     className={`rounded-full px-2.5 md:px-3 py-0.5 md:py-1 text-xs font-semibold ${phase.status === "completed"
-                                            ? "bg-emerald-400/10 text-emerald-400"
-                                            : phase.status === "in‑progress"
-                                                ? "bg-amber-400/10 text-amber-400"
-                                                : "bg-muted text-muted-foreground"
+                                        ? "bg-emerald-400/10 text-emerald-400"
+                                        : phase.status === "in‑progress"
+                                            ? "bg-amber-400/10 text-amber-400"
+                                            : "bg-muted text-muted-foreground"
                                         }`}
                                 >
                                     {phase.phase}
