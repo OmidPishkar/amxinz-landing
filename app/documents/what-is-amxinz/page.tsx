@@ -123,6 +123,27 @@ export default function WhatIsAmxinzPage() {
                 </motion.figure>
             </motion.header>
 
+            <Section>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight">What exactly is Amxinz?</h2>
+
+                <p className="mt-2 text-sm md:text-base text-muted-foreground">
+                    Amxinz is a <strong>non-custodial</strong> trading journal that
+                    automatically imports public trading activity from supported DEX
+                    platforms and transforms it into AI-powered performance analytics.
+                </p>
+
+                <p className="mt-2 text-sm md:text-base text-muted-foreground">
+                    Instead of manually recording trades, every position becomes part of
+                    a transparent trading history that can be shared through a verified
+                    public profile.
+                </p>
+
+                <p className="mt-2 text-sm md:text-base text-muted-foreground">
+                    Users always remain in control of their assets.
+                    Amxinz never requests private keys or custody of funds.
+                </p>
+            </Section>
+
             {/* ───── Problem ───── */}
             <Section>
                 <h2 className="text-2xl md:text-3xl font-bold tracking-tight">

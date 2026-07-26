@@ -8,15 +8,7 @@ export default function robots(): MetadataRoute.Robots {
                 allow: "/",
                 disallow: [
                     "/api/",
-                    "/journal/",
-                    "/login",
-                    "/signup",
-                    "/profile",
                 ],
-            },
-            {
-                userAgent: "GPTBot",
-                disallow: "/",
             },
         ],
         sitemap: "https://amxinz.com/sitemap.xml",
