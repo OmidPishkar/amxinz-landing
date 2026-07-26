@@ -141,72 +141,44 @@ const Footer = () => {
                         viewport={{ once: true }}
                         transition={{ duration: 0.4, delay: 0.1 }}
                     >
-                        <h4 className="mb-5 font-semibold">Preview</h4>
+                        <h4 className="mb-5 font-semibold">Product</h4>
                         <ul className="space-y-3 text-sm">
-                            <li><button onClick={scrollToFeatures} className="text-muted-foreground hover:text-foreground transition-colors">Journal</button></li>
-                            <li><button onClick={scrollToFeatures} className="text-muted-foreground hover:text-foreground transition-colors">Profile</button></li>
-                            <li><button onClick={scrollToFeatures} className="text-muted-foreground hover:text-foreground transition-colors">Leaderboard</button></li>
-                            <li><button onClick={scrollToWaitlist} className="text-muted-foreground hover:text-foreground transition-colors">Early Access</button></li>
+                            <li><button onClick={scrollToFeatures} className="text-muted-foreground hover:text-foreground transition-colors">Features</button></li>
+                            <li><button onClick={scrollToWaitlist} className="text-muted-foreground hover:text-foreground transition-colors">Waitlist</button></li>
+                            <li><Link href="/faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</Link></li>
                         </ul>
                     </motion.nav>
 
-                    {/* Resources */}
+                    {/* Learn */}
                     <motion.nav
-                        aria-label="Resource links"
+                        aria-label="Learn"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.4, delay: 0.2 }}
                     >
-                        <h4 className="mb-5 font-semibold">Resources</h4>
+                        <h4 className="mb-5 font-semibold">Learn</h4>
+                        <ul className="space-y-3 text-sm">
+                            <li><Link href="/documents/what-is-amxinz" className="text-muted-foreground hover:text-foreground transition-colors">What is Amxinz</Link></li>
+                            <li><Link href="/documents/how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</Link></li>
+                            <li><Link href="/documents/whitepaper" className="text-muted-foreground hover:text-foreground transition-colors">Whitepaper</Link></li>
+                        </ul>
+                    </motion.nav>
+
+                    {/* Legal */}
+                    <motion.nav
+                        aria-label="Legal"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: 0.3 }}
+                    >
+                        <h4 className="mb-5 font-semibold">Legal</h4>
                         <ul className="space-y-3 text-sm">
                             <li><Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy</Link></li>
                             <li><Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms</Link></li>
                         </ul>
                     </motion.nav>
-
-                    {/* Stay Updated */}
-                    <motion.aside
-                        aria-label="Stay updated"
-                        initial={{ opacity: 0, x: 20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: 0.3 }}
-                    >
-                        <h4 className="mb-5 font-semibold">Stay Updated</h4>
-                        <p className="mb-5 text-sm text-muted-foreground">
-                            Get notified when we launch and receive exclusive trading insights.
-                        </p>
-                        <motion.form
-                            onSubmit={handleSubscribe}
-                            className="space-y-3"
-                        >
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <input
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] py-3 pl-11 pr-4 backdrop-blur-xl outline-none"
-                                />
-                            </div>
-                            <motion.button
-                                type="submit"
-                                disabled={submitting}
-                                className="w-full rounded-2xl py-3 font-semibold text-black disabled:opacity-50"
-                                style={{ background: 'linear-gradient(135deg,#FFB84D,#F59E0B)' }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                {submitting ? 'Subscribing...' : 'Subscribe'}
-                            </motion.button>
-                        </motion.form>
-                        {subscribed && (
-                            <p className="mt-3 text-xs text-green-400">Thanks for subscribing.</p>
-                        )}
-                    </motion.aside>
                 </div>
 
                 {/* Bottom */}
