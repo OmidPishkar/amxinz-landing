@@ -8,7 +8,6 @@ import {
     ChevronDown,
     HelpCircle,
     ArrowRight,
-    Star,
     Mail,
 } from "lucide-react";
 

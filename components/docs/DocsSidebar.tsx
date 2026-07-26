@@ -1,4 +1,3 @@
-// components/docs/DocsSidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -13,29 +12,17 @@ import {
 } from "lucide-react";
 
 const navItems = [
-    {
-        href: "/documents/what-is-amxinz",
-        label: "What is Amxinz?",
-        icon: <BookOpen className="h-4 w-4" />,
-    },
-    {
-        href: "/documents/how-it-works",
-        label: "How It Works",
-        icon: <ArrowRight className="h-4 w-4" />,
-    },
-    {
-        href: "/documents/whitepaper",
-        label: "Whitepaper",
-        icon: <FileText className="h-4 w-4" />,
-    },
-    {
-        href: "/faq",
-        label: "FAQ",
-        icon: <HelpCircle className="h-4 w-4" />,
-    },
+    { href: "/documents/what-is-amxinz", label: "What is Amxinz?", icon: <BookOpen className="h-4 w-4" /> },
+    { href: "/documents/how-it-works", label: "How It Works", icon: <ArrowRight className="h-4 w-4" /> },
+    { href: "/documents/whitepaper", label: "Whitepaper", icon: <FileText className="h-4 w-4" /> },
+    { href: "/faq", label: "FAQ", icon: <HelpCircle className="h-4 w-4" /> },
 ];
 
-export default function DocsSidebar() {
+interface DocsSidebarProps {
+    onLinkClick?: () => void;
+}
+
+export default function DocsSidebar({ onLinkClick }: DocsSidebarProps) {
     const pathname = usePathname();
 
     return (
@@ -54,6 +41,7 @@ export default function DocsSidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={onLinkClick}
                             className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all ${isActive
                                     ? "bg-primary/10 text-primary shadow-[0_0_15px_rgba(245,158,11,0.15)]"
                                     : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"
@@ -75,6 +63,7 @@ export default function DocsSidebar() {
 
                 <Link
                     href="/#waitlist"
+                    onClick={onLinkClick}
                     className="flex items-center justify-center gap-2 rounded-2xl bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/20 hover:shadow-lg hover:shadow-primary/10"
                 >
                     <Star className="h-4 w-4" />

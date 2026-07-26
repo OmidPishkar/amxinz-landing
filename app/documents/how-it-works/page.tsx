@@ -3,7 +3,6 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import { ArrowRight, Wallet, BarChart3, Star, Share2 } from "lucide-react";
 
 /* -------------------------------------------------- */

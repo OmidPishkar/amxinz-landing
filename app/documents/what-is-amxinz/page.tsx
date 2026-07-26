@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import {
     Shield,
     TrendingUp,
@@ -190,7 +189,7 @@ export default function WhatIsAmxinzPage() {
                                 title: "Share your verified profile",
                                 desc: "A single link proves your skill to prop firms, investors, and the community.",
                             },
-                        ].map((item, i) => (
+                        ].map((item, _i) => (
                             <motion.div
                                 key={item.step}
                                 variants={fadeUp}
