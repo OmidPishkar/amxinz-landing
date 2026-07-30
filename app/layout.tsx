@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://amxinz.com',
   },
+  icons: {
+    icon: '/favicon.ico',       // فایل ۴۸ در ۴۸ برای گوگل
+    shortcut: '/logo.png',   // فایل ۳۲ در ۳۲ برای مرورگر
+    apple: '/apple-touch-icon.png',   // فایل ۱۸۰ در ۱۸۰ برای آیفون
+  },
   openGraph: {
     title: 'Amxinz — Verified DEX Trading Journal & Community',
     description: 'Every trade builds your reputation. Automatically verify your DEX trades across Jupiter & Hyperliquid, analyze performance with AI, and build a verified on-chain profile traders can trust.',
@@ -18,7 +23,7 @@ export const metadata: Metadata = {
     siteName: 'Amxinz',
     images: [
       {
-        url: 'https://amxinz.com', // یک عکس گرافیکی جذاب از محیط پلتفرم یا لیدربورد در پوشه public قرار بده
+        url: '/og-landing.png', // یک عکس گرافیکی جذاب از محیط پلتفرم یا لیدربورد در پوشه public قرار بده
         width: 1200,
         height: 630,
         alt: 'Amxinz - On-chain Reputation Layer for DEX Traders',
@@ -32,7 +37,7 @@ export const metadata: Metadata = {
     title: 'Amxinz — Verified DEX Trading Journal & Community',
     description: 'Every trade builds your reputation. Automatically verify your DEX trades across Jupiter & Hyperliquid, analyze performance with AI, and build a verified on-chain profile traders can trust.',
     images: ['https://amxinz.com'],
-    creator: '@amxinz',
+    creator: '@OJR17',
     site: '@amxinz',
   },
   keywords: [
@@ -61,7 +66,7 @@ export default function RootLayout({
     "url": "https://amxinz.com",
     "logo": "https://amxinz.com/favicon.ico",
     "description": "A decentralized trading journal and on-chain reputation layer built for DEX traders.",
-    "foundingDate": "2024",
+    "foundingDate": "2026",
     "sameAs": [
       "https://www.producthunt.com/products/amxinz" // لینک محصول دقیقاً به سازمان متصل شد
     ],
