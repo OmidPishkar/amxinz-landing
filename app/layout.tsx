@@ -22,6 +22,12 @@ export const metadata: Metadata = {
     "calcXP"
   ],
 
+  icons: {
+    icon: '/favicon.ico', // یا '/logo.png'
+    shortcut: '/logo.png',
+    apple: '/apple-touch-icon.png',
+  },
+
   openGraph: {
     title: "Amxinz | On-Chain Trading Journal",
     description: "The decentralized trading journal built for DEX traders to validate their performance.",
