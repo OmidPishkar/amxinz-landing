@@ -25,6 +25,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.9, // اولویت بالا برای معرفی ماهیت پروژه به هوش مصنوعی
         },
         {
+            url: `${baseUrl}/documents`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as const,
+            priority: 0.9, // اولویت بالا به عنوان صفحه مرجع مستندات
+        },
+        {
             url: `${baseUrl}/documents/how-it-works`,
             lastModified: new Date(),
             changeFrequency: 'monthly' as const,
