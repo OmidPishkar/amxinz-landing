@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { ImageResponse } from "next/og";
 
 export const size = { width: 180, height: 180 };
@@ -20,7 +19,7 @@ export default function AppleIcon() {
           fontWeight: 700,
         }}
       >
-        <Image src="/logo.png" alt="Amxinz" width={24} height={24} className="rounded-md" />
+        <img src="/logo.png" alt="Amxinz" width={24} height={24} className="rounded-md" />
 
       </div>
     ),

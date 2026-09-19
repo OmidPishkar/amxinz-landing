@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { ImageResponse } from "next/og";
 
 export const size = { width: 48, height: 48 };
@@ -22,7 +21,7 @@ export default function Icon() {
           borderRadius: 10,
         }}
       >
-        <Image src="/logo.png" alt="Amxinz" width={24} height={24} className="rounded-md" />
+        <img src="/logo.png" alt="Amxinz" width={24} height={24} className="rounded-md" />
 
       </div>
     ),
