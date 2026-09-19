@@ -13,7 +13,7 @@ export default function NotFound() {
     <div className="mx-auto max-w-5xl px-4 py-24">
       <p className="text-muted-foreground">404</p>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">This page does not exist</h1>
-      <p className="mt-2 text-muted-foreground">Check the address, or head back to the game.</p>
+      <p className="mt-2 text-muted-foreground">Check the address, or head back to the Home.</p>
       <div className="mt-6 flex gap-2">
         <Button asChild>
           <Link href="/">Go home</Link>
