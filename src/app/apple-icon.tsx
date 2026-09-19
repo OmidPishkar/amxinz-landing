@@ -4,6 +4,8 @@ export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
 export default function AppleIcon() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://amxinz.com";
+  
   return new ImageResponse(
     (
       <div
@@ -19,7 +21,7 @@ export default function AppleIcon() {
           fontWeight: 700,
         }}
       >
-        <img src="/logo.png" alt="Amxinz" width={24} height={24} className="rounded-md" />
+        <img src={`${baseUrl}/logo.png`} alt="Amxinz" width={24} height={24} className="rounded-md" />
 
       </div>
     ),

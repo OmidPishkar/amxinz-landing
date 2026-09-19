@@ -5,6 +5,7 @@ export const contentType = "image/png";
 
 // Placeholder mark. Replace with your real logo when you have it.
 export default function Icon() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://amxinz.com";
   return new ImageResponse(
     (
       <div
@@ -21,7 +22,7 @@ export default function Icon() {
           borderRadius: 10,
         }}
       >
-        <img src="/logo.png" alt="Amxinz" width={24} height={24} className="rounded-md" />
+        <img src={`${baseUrl}/logo.png`} alt="Amxinz" width={24} height={24} className="rounded-md" />
 
       </div>
     ),
