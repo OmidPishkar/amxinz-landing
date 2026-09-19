@@ -26,7 +26,7 @@ export async function Navbar() {
             <UserMenu name={session.user.name ?? "Player"} image={session.user.image ?? null} />
           ) : (
             <LoginDialog>
-              <Button size="sm" className="ml-1">Log in</Button>
+              <Button size="sm" className="ml-1">Login</Button>
             </LoginDialog>
           )}
         </nav>
