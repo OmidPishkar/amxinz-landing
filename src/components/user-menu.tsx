@@ -14,7 +14,7 @@ export function UserMenu({ name, image }: { name: string; image: string | null }
       </span>
       <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: "/" })}>
         <LogOut />
-        Log out
+        Logout
       </Button>
     </div>
   );
