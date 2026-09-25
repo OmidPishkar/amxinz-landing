@@ -10,6 +10,11 @@ export interface UserDoc {
   played: number;
   correct: number;
   createdAt: Date;
+  // profile (all optional: older users do not have them)
+  avatarUrl?: string | null;
+  email?: string | null;
+  emailVerified?: boolean;
+  username?: string | null; // lowercase, unique; see the "username" index in the username route
 }
 
 export interface NonceDoc {
@@ -39,4 +44,17 @@ export interface RoundDoc {
   correct?: boolean;
   createdAt: Date;
   answeredAt?: Date;
+}
+
+export interface EmailTokenDoc {
+  userId: string;
+  email: string;
+  tokenHash: string;
+  expiresAt: Date;
+}
+
+export interface RateDoc {
+  _id: string;
+  n: number;
+  expiresAt: Date;
 }

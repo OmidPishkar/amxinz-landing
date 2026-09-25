@@ -117,3 +117,39 @@ Also:
 - Variables starting with `NEXT_PUBLIC_` are baked in at build time: redeploy after changing them.
 
 After launch: add the site in Google Search Console and Bing Webmaster Tools (paste the verification codes into the two `*_VERIFICATION` variables), then submit `https://www.amxinz.com/sitemap.xml`.
+
+## Profile page (`/profile`)
+
+Private page for the logged-in user (not indexed, blocked in robots.txt):
+
+- **Photo**: upload with UploadThing (max 2 MB). The image URL is checked server-side (only UploadThing hosts are accepted) and the previous file is deleted. The uploaded photo replaces the Google photo in the navbar, the leaderboard and the profile.
+- **Email**: confirmation link sent with Resend. The address is saved on the profile only after the link is opened (1 hour, single use). Rate limited to 3 emails per hour per user.
+- **Your predictions**: score, accuracy, last 20 results, and a paginated table with time, asset, timeframe, chart date, your call, the market outcome, result and points. Filter by correct or wrong.
+
+Setup:
+
+1. UploadThing: create an app at uploadthing.com, copy the token into `UPLOADTHING_TOKEN`.
+2. Resend: create an API key (`RESEND_API_KEY`). Until you verify a domain in Resend, mail sent from `onboarding@resend.dev` is only delivered to your own Resend account email. To email any user, verify your domain and set `EMAIL_FROM="Amxinz <no-reply@yourdomain.com>"`.
+3. Add all three variables in Netlify too, then redeploy.
+
+## Performance charts, image export, PDF export (profile page)
+
+- **Performance**: overall win rate (donut), up-calls vs. down-calls, and win rate by asset. All server-rendered SVG (`src/components/profile/win-rate-donut.tsx`, `bar-list.tsx`), no charting library. Powered by `getPerformanceStats()` in `src/lib/profile.ts`, one aggregation query with `$facet`. "Best asset" only appears once a user has at least 5 rounds on it (`MIN_ASSET_SAMPLE`), so a single lucky round can't claim the title.
+- **Download image**: a 1080x1350 PNG (Instagram-portrait ratio) with win rate, stats, best asset, last-20 form and the site URL, drawn client-side with the Canvas API (`result-card-download.tsx`). No screenshots or server rendering needed.
+- **Download PDF**: `GET /api/profile/pdf` builds a paginated A4 PDF (via `pdf-lib`) of the user's last 1,000 predictions (`EXPORT_LIMIT` in `src/lib/profile.ts`), rate-limited to 5 exports/hour/user.
+
+Replace the "A" mark drawn in `result-card-download.tsx` with your real logo once you have one (same placeholder pattern as `logo.tsx`).
+
+## Username (`/profile`)
+
+Unique handle, 3-20 chars (lowercase letters, numbers, underscore, starting with a letter). Enforced both in the API route (regex + a reserved-word list) and at the database level with a unique sparse index on `users.username`, so a race between two people is still caught. Limited to 5 changes per day per user.
+
+## Logo on exports
+
+- **Download image**: loads `/logo.png` client-side and draws it in the card header. Falls back to the same "A" placeholder mark used elsewhere if the file is missing.
+- **Download PDF**: reads `public/logo.png` from disk on the server and embeds it next to the title. Falls back to a text-only title if the file isn't there.
+- The player's own photo (uploaded photo, or Google photo) is drawn in the top-right corner of the shareable image. If the photo's host blocks anonymous cross-origin reads, the download automatically retries without it rather than failing.
+
+## Date range filter (`/profile#predictions`)
+
+Presets (All time / Today / This week / This month) plus a custom "From/To" date picker, all clamped so a player can never filter earlier than their own signup date. Combines with the existing correct/wrong filter and pagination via the URL's `from`/`to`/`result`/`page` params.

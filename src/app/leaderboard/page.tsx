@@ -82,7 +82,7 @@ export default async function LeaderboardPage() {
                     <td className="px-3 py-2 tabular-nums text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-2">
                       <span className="flex items-center gap-2">
-                        <Avatar name={u.name} image={u.image} />
+                        <Avatar name={u.name} image={u.avatarUrl ?? u.image} />
                         <span className="truncate">{u.name}</span>
                         {isMe && <span className="text-xs text-muted-foreground">(you)</span>}
                       </span>

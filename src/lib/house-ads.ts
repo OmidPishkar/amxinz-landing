@@ -12,6 +12,6 @@ export const HOUSE_ADS: HouseAd[] = [
     title: "Your ad could be here",
     body: "Reach people who practice reading charts every day. Book a full-screen slot on Amxinz and pay in crypto.",
     cta: "Advertise with us",
-    href: "mailto:omidjr17@gmail.com", // TODO: replace with your real contact
+    href: "mailto:ads@amxinz.com", // TODO: replace with your real contact
   },
 ];

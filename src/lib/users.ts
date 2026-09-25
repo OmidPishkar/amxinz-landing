@@ -13,3 +13,9 @@ export async function getUserStats(id: string) {
     correct: user?.correct ?? 0,
   };
 }
+
+export async function getUserById(id: string) {
+  if (!ObjectId.isValid(id)) return null;
+  const db = await getDb();
+  return db.collection<UserDoc>("users").findOne({ _id: new ObjectId(id) });
+}

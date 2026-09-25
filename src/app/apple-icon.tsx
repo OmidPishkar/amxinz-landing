@@ -1,11 +1,10 @@
 import { ImageResponse } from "next/og";
+import { SITE_URL as baseUrl } from "@/config/site";
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
 export default function AppleIcon() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://amxinz.com";
-  
   return new ImageResponse(
     (
       <div
@@ -15,14 +14,10 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#37352f",
-          color: "#ffffff",
-          fontSize: 112,
-          fontWeight: 700,
+          background: "#ffffff",
         }}
       >
-        <img src={`${baseUrl}/logo.png`} alt="Amxinz" width={24} height={24} className="rounded-md" />
-
+        <img src={`${baseUrl}/logo.png`} alt="Amxinz" width={110} height={110} className="rounded-md" />
       </div>
     ),
     { ...size },

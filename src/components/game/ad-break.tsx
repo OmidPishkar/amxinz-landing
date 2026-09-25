@@ -58,7 +58,7 @@ export function AdBreak({ onClose }: { onClose: () => void }) {
       </div>
 
       <p className="shrink-0 border-t px-4 py-2 text-center text-xs text-muted-foreground">
-        Ads keep Amxinz free to countinue.
+        Ads keep Amxinz free to play.
       </p>
     </div>
   );

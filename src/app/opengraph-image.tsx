@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { ImageResponse } from "next/og";
+import { SITE_URL as baseUrl } from "@/config/site";
 
 export const alt = "Amxinz: predict real candlestick charts and climb the leaderboard";
 export const size = { width: 1200, height: 630 };
@@ -33,7 +34,6 @@ function makeCandles(n: number) {
 
 // Generated at build time; shared by Open Graph and Twitter cards.
 export default function OpengraphImage() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://amxinz.com";
   const candles = makeCandles(VISIBLE);
   const lo = Math.min(...candles.map((c) => c.low));
   const hi = Math.max(...candles.map((c) => c.high));
@@ -56,23 +56,7 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 56,
-              height: 56,
-              borderRadius: 12,
-              background: "#37352f",
-              color: "#ffffff",
-              fontSize: 34,
-              fontWeight: 700,
-            }}
-          >
-            <img src={`${baseUrl}/logo.png`} alt="Amxinz" width={24} height={24} className="rounded-md" />
-
-          </div>
+          <img src={`${baseUrl}/logo.png`} alt="Amxinz" width={56} height={56} />
           <div style={{ display: "flex", marginLeft: 18, fontSize: 36, fontWeight: 700 }}>Amxinz</div>
         </div>
 

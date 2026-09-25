@@ -13,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       // /api holds auth and game endpoints. Never block /_next: Google needs its CSS/JS to render pages.
-      { userAgent: "*", allow: "/", disallow: ["/api/"] },
+      { userAgent: "*", allow: "/", disallow: ["/api/", "/profile"] },
       ...(SITE.blockAiTraining ? [{ userAgent: [...AI_TRAINING_BOTS], disallow: "/" }] : []),
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

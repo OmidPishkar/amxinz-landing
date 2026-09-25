@@ -15,12 +15,17 @@ export async function POST(req: Request) {
   }
 
   const nonce = randomUUID().replace(/-/g, "");
-  const db = await getDb();
-  await db.collection<NonceDoc>("nonces").updateOne(
-    { address },
-    { $set: { nonce, expiresAt: new Date(Date.now() + 5 * 60_000) } },
-    { upsert: true },
-  );
+  try {
+    const db = await getDb();
+    await db.collection<NonceDoc>("nonces").updateOne(
+      { address },
+      { $set: { nonce, expiresAt: new Date(Date.now() + 5 * 60_000) } },
+      { upsert: true },
+    );
+  } catch (err) {
+    console.error("wallet/nonce error:", err);
+    return NextResponse.json({ error: "Could not reach the database. Check MONGODB_URI." }, { status: 502 });
+  }
 
   return NextResponse.json({ message: buildSignMessage(address, nonce) });
 }
