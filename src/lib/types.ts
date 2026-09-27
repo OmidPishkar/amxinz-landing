@@ -58,3 +58,19 @@ export interface RateDoc {
   n: number;
   expiresAt: Date;
 }
+
+export interface BlogPostDoc {
+  _id: ObjectId;
+  slug: string; // unique, url-safe; see RESERVED_SLUGS in lib/blog.ts
+  title: string;
+  bannerUrl: string;
+  description: string; // Markdown; rendered through lib/markdown.ts before display
+  footer?: string | null; // optional Markdown footnote, shown below the main content
+  tags: string[]; // as typed by the admin, e.g. "Candlestick Patterns"
+  tagSlugs: string[]; // lowercase/slugified, parallel to tags; used for querying and URLs
+  metaDescription?: string | null; // optional custom SEO description; falls back to an excerpt
+  authorName: string;
+  published: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}

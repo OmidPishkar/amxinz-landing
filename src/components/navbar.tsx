@@ -2,11 +2,9 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getUserById } from "@/lib/users";
-import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { LoginDialog } from "@/components/login-dialog";
-import { UserMenu } from "@/components/user-menu";
+import { HamburgerMenu } from "@/components/hamburger-menu";
 
 export async function Navbar() {
   const session = await getServerSession(authOptions);
@@ -28,19 +26,14 @@ export async function Navbar() {
           <Logo />
           <span className="text-[15px] font-semibold tracking-tight">Amxinz</span>
         </Link>
-        <nav aria-label="Main" className="flex items-center gap-1">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/leaderboard">Leaderboard</Link>
-          </Button>
+        <div className="flex items-center gap-1">
           <ThemeToggle />
-          {session?.user ? (
-            <UserMenu name={session.user.name ?? "Player"} image={avatar ?? session.user.image ?? null} />
-          ) : (
-            <LoginDialog>
-              <Button size="sm" className="ml-1">Log in</Button>
-            </LoginDialog>
-          )}
-        </nav>
+          <HamburgerMenu
+            loggedIn={!!session?.user}
+            name={session?.user?.name ?? "Player"}
+            image={avatar ?? session?.user?.image ?? null}
+          />
+        </div>
       </div>
     </header>
   );

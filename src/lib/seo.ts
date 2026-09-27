@@ -10,27 +10,35 @@ export function pageMetadata({
   title,
   description,
   path,
+  image: customImage,
+  article,
 }: {
   title?: string;
   description: string;
   path: string;
+  image?: { url: string; width: number; height: number; alt: string };
+  article?: { publishedTime: string; modifiedTime?: string; tags?: string[] };
 }): Metadata {
   const shareTitle = title ? `${title} · ${SITE.name}` : SITE.title;
-  const image = { url: "/opengraph-image", width: 1200, height: 630, alt: OG_ALT };
+  const image = customImage ?? { url: "/opengraph-image", width: 1200, height: 630, alt: OG_ALT };
+
+  const openGraphBase = {
+    siteName: SITE.name,
+    locale: SITE.locale,
+    url: path,
+    title: shareTitle,
+    description,
+    images: [image],
+  };
+  const openGraph: Metadata["openGraph"] = article
+    ? { ...openGraphBase, type: "article", publishedTime: article.publishedTime, modifiedTime: article.modifiedTime, tags: article.tags }
+    : { ...openGraphBase, type: "website" };
 
   return {
     ...(title ? { title } : {}),
     description,
     alternates: { canonical: path },
-    openGraph: {
-      type: "website",
-      siteName: SITE.name,
-      locale: SITE.locale,
-      url: path,
-      title: shareTitle,
-      description,
-      images: [image],
-    },
+    openGraph,
     twitter: {
       card: "summary_large_image",
       title: shareTitle,

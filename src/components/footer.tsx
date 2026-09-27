@@ -7,6 +7,7 @@ export function Footer() {
         <p>© {new Date().getFullYear()} Amxinz. Market data from Binance. For practice, not financial advice.</p>
         <nav aria-label="Footer" className="flex gap-4">
           <Link href="/" className="hover:text-foreground">Home</Link>
+          <Link href="/weblog" className="hover:text-foreground">Weblog</Link>
           <Link href="/leaderboard" className="hover:text-foreground">Leaderboard</Link>
         </nav>
       </div>

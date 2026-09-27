@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { authOptions } from "@/lib/auth";
+import { isAdminSession } from "@/lib/admin";
 
 const f = createUploadthing();
 
@@ -13,6 +14,15 @@ export const ourFileRouter = {
       const session = await getServerSession(authOptions);
       if (!session?.user?.id) throw new UploadThingError("Log in to upload a photo.");
       return { userId: session.user.id };
+    })
+    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.userId })),
+
+  // Blog banners: admin-only, same enforcement as the /api/weblog routes.
+  blogBanner: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
+    .middleware(async () => {
+      const session = await getServerSession(authOptions);
+      if (!(await isAdminSession(session))) throw new UploadThingError("Admins only.");
+      return { userId: session!.user.id };
     })
     .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.userId })),
 } satisfies FileRouter;

@@ -75,6 +75,114 @@ export function landingSchema() {
   };
 }
 
+/** Reusable breadcrumb trail: Home > ... > current page. */
+function breadcrumbList(url: string, trail: { name: string; item: string }[]) {
+  return {
+    "@type": "BreadcrumbList",
+    "@id": `${url}#breadcrumb`,
+    itemListElement: trail.map((step, i) => ({ "@type": "ListItem", position: i + 1, ...step })),
+  };
+}
+
+/** /weblog: the listing page plus its breadcrumb. */
+export function blogIndexSchema(description: string) {
+  const url = `${SITE_URL}/weblog`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${url}#webpage`,
+        url,
+        name: "Weblog",
+        description,
+        inLanguage: SITE.language,
+        isPartOf: { "@id": ID.site },
+        breadcrumb: { "@id": `${url}#breadcrumb` },
+      },
+      breadcrumbList(url, [
+        { name: "Home", item: `${SITE_URL}/` },
+        { name: "Weblog", item: url },
+      ]),
+    ],
+  };
+}
+
+/** /weblog/tag/[tag]: the archive page plus its breadcrumb. */
+export function blogTagSchema(tag: string, tagSlug: string, description: string) {
+  const url = `${SITE_URL}/weblog/tag/${tagSlug}`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${url}#webpage`,
+        url,
+        name: `${tag} — Weblog`,
+        description,
+        inLanguage: SITE.language,
+        isPartOf: { "@id": ID.site },
+        breadcrumb: { "@id": `${url}#breadcrumb` },
+      },
+      breadcrumbList(url, [
+        { name: "Home", item: `${SITE_URL}/` },
+        { name: "Weblog", item: `${SITE_URL}/weblog` },
+        { name: tag, item: url },
+      ]),
+    ],
+  };
+}
+
+export interface BlogPostSchemaInput {
+  slug: string;
+  title: string;
+  description: string; // plain-text excerpt, not the full body
+  bannerUrl: string;
+  authorName: string;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** /weblog/[slug]: BlogPosting + breadcrumb. */
+export function blogPostSchema(post: BlogPostSchemaInput) {
+  const url = `${SITE_URL}/weblog/${post.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        "@id": `${url}#article`,
+        mainEntityOfPage: `${url}#webpage`,
+        headline: post.title,
+        description: post.description,
+        image: post.bannerUrl,
+        datePublished: post.createdAt.toISOString(),
+        dateModified: post.updatedAt.toISOString(),
+        inLanguage: SITE.language,
+        author: { "@type": "Person", name: post.authorName },
+        publisher: { "@id": ID.org },
+        ...(post.tags.length ? { keywords: post.tags.join(", ") } : {}),
+      },
+      {
+        "@type": "WebPage",
+        "@id": `${url}#webpage`,
+        url,
+        name: post.title,
+        description: post.description,
+        inLanguage: SITE.language,
+        isPartOf: { "@id": ID.site },
+        breadcrumb: { "@id": `${url}#breadcrumb` },
+      },
+      breadcrumbList(url, [
+        { name: "Home", item: `${SITE_URL}/` },
+        { name: "Weblog", item: `${SITE_URL}/weblog` },
+        { name: post.title, item: url },
+      ]),
+    ],
+  };
+}
+
 /** Leaderboard page: the page plus its breadcrumb trail. */
 export function leaderboardSchema(description: string) {
   const url = `${SITE_URL}/leaderboard`;
@@ -91,14 +199,10 @@ export function leaderboardSchema(description: string) {
         isPartOf: { "@id": ID.site },
         breadcrumb: { "@id": `${url}#breadcrumb` },
       },
-      {
-        "@type": "BreadcrumbList",
-        "@id": `${url}#breadcrumb`,
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
-          { "@type": "ListItem", position: 2, name: "Leaderboard", item: url },
-        ],
-      },
+      breadcrumbList(url, [
+        { name: "Home", item: `${SITE_URL}/` },
+        { name: "Leaderboard", item: url },
+      ]),
     ],
   };
 }
