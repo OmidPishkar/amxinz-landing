@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { LoginDialog } from "@/components/login-dialog";
 import { CopyLinkButton } from "@/components/challenges/copy-link-button";
 import { cn } from "@/lib/utils";
+import { ChallengeBadges } from "@/components/badges/challenge-badges";
+import { finalizeEndedChallenges, getBadgesForUsers, getMyAnswers } from "@/lib/challenge-stats";
+import { formatAsset, formatChartDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -31,11 +34,14 @@ export default async function ChallengePage({ params }: { params: Promise<{ code
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
 
-  const [entry, { board, players, finished }, creators] = await Promise.all([
+  await finalizeEndedChallenges();
+  const [entry, { board, players, finished }, creators, myAnswers] = await Promise.all([
     userId ? getEntry(challenge.code, userId) : Promise.resolve(null),
     getLeaderboard(challenge.code),
     getUserNames([challenge.creatorId]),
+    userId ? getMyAnswers(challenge.code, userId) : Promise.resolve([]),
   ]);
+  const badges = await getBadgesForUsers(board.map((r) => r.userId));
 
   const ended = challenge.endsAt <= new Date();
   const answered = entry?.answers.length ?? 0;
@@ -113,7 +119,14 @@ export default async function ChallengePage({ params }: { params: Promise<{ code
                     <td className="px-3 py-2">
                       <span className="flex items-center gap-2">
                         <Avatar name={row.name} image={row.image} />
-                        <span className="truncate">{row.name}</span>
+                        {row.username ? (
+                          <Link href={`/u/${row.username}`} className="truncate hover:underline">
+                            {row.name}
+                          </Link>
+                        ) : (
+                          <span className="truncate">{row.name}</span>
+                        )}
+                        <ChallengeBadges counts={badges.get(row.userId)} />
                         {isMe && <span className="text-xs text-muted-foreground">(you)</span>}
                       </span>
                     </td>
@@ -128,6 +141,45 @@ export default async function ChallengePage({ params }: { params: Promise<{ code
             </tbody>
           </table>
         </div>
+      )}
+
+      {myAnswers.length > 0 && (
+        <section aria-labelledby="answers-heading" className="mt-10">
+          <h2 id="answers-heading" className="mb-3 text-base font-semibold tracking-tight">
+            Your answers
+          </h2>
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-[13px]">
+              <caption className="sr-only">Your answers in this challenge</caption>
+              <thead className="border-b bg-muted text-left text-muted-foreground">
+                <tr>
+                  <th scope="col" className="px-3 py-2 font-medium">Chart</th>
+                  <th scope="col" className="px-3 py-2 font-medium">Asset</th>
+                  <th scope="col" className="px-3 py-2 font-medium">Timeframe</th>
+                  <th scope="col" className="px-3 py-2 font-medium">Chart from</th>
+                  <th scope="col" className="px-3 py-2 font-medium">Your call</th>
+                  <th scope="col" className="px-3 py-2 font-medium">Market</th>
+                  <th scope="col" className="px-3 py-2 text-right font-medium">Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myAnswers.map((a) => (
+                  <tr key={a.index} className="border-b last:border-0">
+                    <td className="px-3 py-2 tabular-nums text-muted-foreground">{a.index + 1}</td>
+                    <td className="whitespace-nowrap px-3 py-2">{formatAsset(a.symbol)}</td>
+                    <td className="px-3 py-2">{a.interval}</td>
+                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{formatChartDate(a.startTime)}</td>
+                    <td className="px-3 py-2 capitalize">{a.choice}</td>
+                    <td className="px-3 py-2 capitalize">{a.outcome}</td>
+                    <td className={cn("px-3 py-2 text-right font-medium tabular-nums", a.correct ? "text-up" : "text-down")}>
+                      {a.correct ? `+${POINTS_CORRECT}` : `-${POINTS_CORRECT}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </div>
   );

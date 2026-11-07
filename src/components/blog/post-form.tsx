@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BannerUploader } from "./banner-uploader";
+import { MarkdownEditor } from "./markdown-editor";
 import { slugify } from "@/lib/slug";
 
 export interface PostFormValues {
@@ -141,20 +142,9 @@ export function PostForm({
 
       <div>
         <label htmlFor="description" className="mb-1.5 block text-[13px] font-medium">
-          Body (Markdown)
+          Body
         </label>
-        <textarea
-          id="description"
-          value={values.description}
-          onChange={(e) => set("description", e.target.value)}
-          rows={16}
-          required
-          maxLength={20_000}
-          className="w-full rounded-md border bg-background px-3 py-2 text-[14px] leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Headings, bold/italic, links, lists and images are supported.
-        </p>
+        <MarkdownEditor id="description" value={values.description} onChange={(v) => set("description", v)} />
       </div>
 
       <div>

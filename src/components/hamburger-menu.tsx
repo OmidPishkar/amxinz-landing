@@ -82,7 +82,7 @@ export function HamburgerMenu({
             <LoginDialog>
               <button
                 role="menuitem"
-                onClick={close}
+                onClick={() => setOpen(true)}
                 className="block w-full px-3 py-2 text-left text-[13px] hover:bg-accent"
               >
                 Log in

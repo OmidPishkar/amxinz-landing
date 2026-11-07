@@ -10,13 +10,15 @@ export const CODE_RE = /^[A-Za-z0-9_-]{6,12}$/;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const globalForIdx = globalThis as unknown as { _challengeIdx?: Promise<unknown> };
 
-async function collections() {
+export async function challengeCollections() {
   const db = await getDb();
   const challenges = db.collection<ChallengeDoc>("challenges");
   const entries = db.collection<ChallengeEntryDoc>("challenge_entries");
   globalForIdx._challengeIdx ??= Promise.all([
     challenges.createIndex({ code: 1 }, { unique: true }),
     challenges.createIndex({ isPublic: 1, endsAt: -1, createdAt: -1 }),
+    challenges.createIndex({ endsAt: 1, finalizedAt: 1 }),
+    challenges.createIndex({ "podium.userId": 1 }),
     entries.createIndex({ challengeCode: 1, userId: 1 }, { unique: true }),
     entries.createIndex({ challengeCode: 1, finishedAt: 1 }),
   ]).catch(() => undefined);
@@ -53,7 +55,7 @@ export async function createChallenge(input: {
     future: r.future,
   }));
 
-  const { challenges } = await collections();
+  const { challenges } = await challengeCollections();
   const now = new Date();
   for (let attempt = 0; attempt < 4; attempt++) {
     const doc: ChallengeDoc = {
@@ -79,14 +81,14 @@ export async function createChallenge(input: {
 /** The challenge WITHOUT its charts. Use this for every page; the charts must never reach the browser in bulk. */
 export async function getChallenge(code: string): Promise<Omit<ChallengeDoc, "items"> | null> {
   if (!CODE_RE.test(code)) return null;
-  const { challenges } = await collections();
+  const { challenges } = await challengeCollections();
   return challenges.findOne({ code }, { projection: { items: 0 } });
 }
 
 export async function getUserNames(ids: string[]): Promise<Map<string, UserDoc>> {
   const valid = ids.filter((id) => ObjectId.isValid(id));
   if (valid.length === 0) return new Map<string, UserDoc>();
-  const { db } = await collections();
+  const { db } = await challengeCollections();
   const users = await db
     .collection<UserDoc>("users")
     .find({ _id: { $in: valid.map((id) => new ObjectId(id)) } })
@@ -95,7 +97,7 @@ export async function getUserNames(ids: string[]): Promise<Map<string, UserDoc>>
 }
 
 export async function listOpenChallenges(limit = 20) {
-  const { challenges, entries } = await collections();
+  const { challenges, entries } = await challengeCollections();
   const open = await challenges
     .find({ isPublic: true, endsAt: { $gt: new Date() } }, { projection: { items: 0 } })
     .sort({ createdAt: -1 })
@@ -121,7 +123,7 @@ export async function listOpenChallenges(limit = 20) {
 // ---------- playing ----------
 
 export async function getEntry(code: string, userId: string) {
-  const { entries } = await collections();
+  const { entries } = await challengeCollections();
   return entries.findOne({ challengeCode: code, userId });
 }
 
@@ -133,7 +135,7 @@ export type NextResult =
 /** Starts the player's entry on first call, then returns the one chart they must answer next. */
 export async function nextChart(code: string, userId: string): Promise<NextResult> {
   if (!CODE_RE.test(code)) return { status: "error", code: 404, error: "Challenge not found." };
-  const { challenges, entries } = await collections();
+  const { challenges, entries } = await challengeCollections();
 
   const challenge = await challenges.findOne({ code });
   if (!challenge) return { status: "error", code: 404, error: "Challenge not found." };
@@ -194,7 +196,7 @@ export async function submitAnswer(
     return { ok: false, status: 400, error: "Invalid request." };
   }
 
-  const { challenges, entries } = await collections();
+  const { challenges, entries } = await challengeCollections();
   const challenge = await challenges.findOne({ code });
   if (!challenge) return { ok: false, status: 404, error: "Challenge not found." };
 
@@ -237,20 +239,17 @@ export async function submitAnswer(
 
 // ---------- results ----------
 
-export interface LeaderboardRow {
+export interface FinisherRow {
   userId: string;
-  name: string;
-  image: string | null;
   score: number;
   correct: number;
   durationMs: number;
 }
 
 /** Finished players ranked by score, then correct calls, then the faster total time. */
-export async function getLeaderboard(code: string, limit = 50) {
-  const { entries } = await collections();
-
-  const rows = (await entries
+export async function topFinishers(code: string, limit: number): Promise<FinisherRow[]> {
+  const { entries } = await challengeCollections();
+  return (await entries
     .aggregate([
       { $match: { challengeCode: code, finishedAt: { $ne: null } } },
       { $addFields: { durationMs: { $subtract: ["$finishedAt", "$startedAt"] } } },
@@ -258,8 +257,19 @@ export async function getLeaderboard(code: string, limit = 50) {
       { $limit: limit },
       { $project: { userId: 1, score: 1, correct: 1, durationMs: 1 } },
     ])
-    .toArray()) as unknown as { userId: string; score: number; correct: number; durationMs: number }[];
+    .toArray()) as unknown as FinisherRow[];
+}
 
+export interface LeaderboardRow extends FinisherRow {
+  name: string;
+  image: string | null;
+  username: string | null; // set only when the player's profile is public
+}
+
+export async function getLeaderboard(code: string, limit = 50) {
+  const { entries } = await challengeCollections();
+
+  const rows = await topFinishers(code, limit);
   const [players, finished] = await Promise.all([
     entries.countDocuments({ challengeCode: code }),
     entries.countDocuments({ challengeCode: code, finishedAt: { $ne: null } }),
@@ -269,12 +279,10 @@ export async function getLeaderboard(code: string, limit = 50) {
   const board: LeaderboardRow[] = rows.map((r) => {
     const u = users.get(r.userId);
     return {
-      userId: r.userId,
+      ...r,
       name: playerName(u),
       image: u?.avatarUrl ?? u?.image ?? null,
-      score: r.score,
-      correct: r.correct,
-      durationMs: r.durationMs,
+      username: u?.profilePublic && u.username ? u.username : null,
     };
   });
 

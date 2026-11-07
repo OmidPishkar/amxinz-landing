@@ -25,6 +25,15 @@ export const ourFileRouter = {
       return { userId: session!.user.id };
     })
     .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.userId })),
+
+  // Pictures placed inside a post body by the editor: admin-only as well.
+  blogImage: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
+    .middleware(async () => {
+      const session = await getServerSession(authOptions);
+      if (!(await isAdminSession(session))) throw new UploadThingError("Admins only.");
+      return { userId: session!.user.id };
+    })
+    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.userId })),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

@@ -15,6 +15,7 @@ export interface UserDoc {
   email?: string | null;
   emailVerified?: boolean;
   username?: string | null; // lowercase, unique; see the "username" index in the username route
+  profilePublic?: boolean; // public page at /u/<username>; anything but true means private
 }
 
 export interface NonceDoc {
@@ -94,6 +95,16 @@ export interface ChallengeDoc {
   items: ChallengeItem[]; // the same charts for every player; never sent to the browser as a whole
   createdAt: Date;
   endsAt: Date;
+  // Written once, the first time anyone loads a page after the challenge ended.
+  finalizedAt?: Date;
+  podium?: ChallengePodiumEntry[]; // empty when fewer than 2 players finished: no badges for a solo run
+}
+
+export interface ChallengePodiumEntry {
+  userId: string;
+  place: 1 | 2 | 3;
+  score: number;
+  correct: number;
 }
 
 export interface ChallengeAnswer {
@@ -112,4 +123,13 @@ export interface ChallengeEntryDoc {
   score: number;
   correct: number;
   finishedAt: Date | null;
+}
+
+export interface RatingDoc {
+  _id: ObjectId;
+  targetId: string; // the rated player
+  raterId: string; // the logged-in player who rated
+  stars: number; // 1-5
+  createdAt: Date;
+  updatedAt: Date;
 }

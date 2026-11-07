@@ -9,6 +9,10 @@ import { POINTS_CORRECT, POINTS_WRONG } from "@/lib/game";
 import { AvatarUploader } from "@/components/profile/avatar-uploader";
 import { EmailForm } from "@/components/profile/email-form";
 import { UsernameForm } from "@/components/profile/username-form";
+import { VisibilityForm } from "@/components/profile/visibility-form";
+import { ChallengeActivityList } from "@/components/profile/challenge-activity";
+import { ChallengeBadges } from "@/components/badges/challenge-badges";
+import { finalizeEndedChallenges, getBadgesForUsers, getChallengeActivity } from "@/lib/challenge-stats";
 import { FormDots } from "@/components/profile/form-dots";
 import { LocalTime } from "@/components/profile/local-time";
 import { WinRateDonut } from "@/components/profile/win-rate-donut";
@@ -121,10 +125,13 @@ export default async function ProfilePage({
   ];
   const isActivePreset = (preset: { from: string; to: string }) => preset.from === fromStr && preset.to === toStr;
 
-  const [{ rows, total, pages, page }, form, perf] = await Promise.all([
+  await finalizeEndedChallenges();
+  const [{ rows, total, pages, page }, form, perf, activity, badges] = await Promise.all([
     getPredictionPage(session.user.id, requestedPage, filter, range),
     getRecentForm(session.user.id),
     getPerformanceStats(session.user.id),
+    getChallengeActivity(session.user.id),
+    getBadgesForUsers([session.user.id]),
   ]);
 
   const bestAssetLabel = perf.bestAsset
@@ -161,6 +168,13 @@ export default async function ProfilePage({
           Username
         </h2>
         <UsernameForm username={user.username ?? null} />
+      </section>
+
+      <section aria-labelledby="visibility-heading" className="mt-8 scroll-mt-16 border-t pt-6">
+        <h2 id="visibility-heading" className="mb-4 text-base font-semibold tracking-tight">
+          Public page
+        </h2>
+        <VisibilityForm isPublic={user.profilePublic === true} username={user.username ?? null} />
       </section>
 
       <section aria-labelledby="photo" className="mt-8 border-t pt-6">
@@ -207,6 +221,19 @@ export default async function ProfilePage({
             emptyText="Play a round to see your win rate per asset."
           />
         </div>
+      </section>
+
+      <section aria-labelledby="challenges-heading" className="mt-8 border-t pt-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 id="challenges-heading" className="text-base font-semibold tracking-tight">
+            Challenges
+          </h2>
+          <ChallengeBadges counts={badges.get(session.user.id)} variant="full" />
+        </div>
+        <ChallengeActivityList
+          activity={activity}
+          emptyText="You have not joined a challenge yet. Open the Challenges page from the menu to start one."
+        />
       </section>
 
       <section aria-labelledby="share-heading" className="mt-8 border-t pt-6">

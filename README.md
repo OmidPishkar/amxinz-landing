@@ -166,7 +166,7 @@ Public, no login required.
 
 Header navigation is now a hamburger menu (`src/components/hamburger-menu.tsx`): Profile/Log in, Weblog, Leaderboard.
 
-New dependencies: `marked` (Markdown → HTML) and `isomorphic-dompurify` (sanitizes that HTML before it's rendered).
+New dependency: `marked` (Markdown → HTML). There is no sanitizer package: `src/lib/markdown.ts` shows raw HTML typed into a post as plain text and removes unsafe link/image URLs itself. (`isomorphic-dompurify` was removed: its `jsdom` dependency chain crashed on Netlify with `ERR_REQUIRE_ESM`.)
 
 ## Guest play and challenges
 
@@ -178,3 +178,12 @@ New dependencies: `marked` (Markdown → HTML) and `isomorphic-dompurify` (sanit
 - Same scoring as solo play (+10 / -10). Ranking: score, then correct calls, then total time. Challenge results are separate from the global leaderboard and profile history.
 - One full-screen ad after the 5th chart (`AD_EVERY_PREDICTIONS`).
 - Creating a challenge is limited to 5 per hour per user (it costs 10 Binance requests).
+
+## Badges, public profiles, ratings, editor
+
+- **Challenge badges** (podium finishes): trophy for wins, silver/bronze medals for 2nd and 3rd. Challenges have no scheduler, so the first page load after one ends writes its podium (top 3, only when at least 2 players finished) onto the challenge, once (`finalizeEndedChallenges` in `src/lib/challenge-stats.ts`). Badge counts are read from those podiums and shown in the global leaderboard, the challenge leaderboard, `/profile` and public profiles.
+- **Challenge history** on `/profile` (joined / finished / average score, newest 20 with rank and score). Each row opens `/challenges/<code>`, which now also lists your own answers for the charts you have already played.
+- **Public / private page** (`/profile`, "Public page"): off by default. Public needs a username; the address is `/u/<username>` and works without logging in. Anyone else who opens a private page only sees "This page is private." (the owner can still see it, with a note). Public pages are `noindex`. Challenges that are "link only" never appear on a public page.
+- **Star ratings**: logged-in players rate a *public* profile 1-5 (once per player, changeable, removable); you can't rate yourself. The average and count show on the page. Accounts are free, so ratings can be gamed with extra accounts; there is a limit of 60 ratings per hour per player.
+- **Blog editor**: toolbar (bold, italic, headings, link, lists, quote, code, divider, image) with Ctrl+B / Ctrl+I / Ctrl+K and a Write/Preview switch. Posts are still stored as Markdown. Images are uploaded through UploadThing (`blogImage`, admin only) and inserted at the cursor. One `#` in the editor shows as H2 on the page, because the post title is the only H1.
+- **Sitemap**: now `force-dynamic`. Before, Next rendered it once at build time, so posts published after a deploy were missing from it.

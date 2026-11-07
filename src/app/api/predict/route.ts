@@ -10,7 +10,7 @@ import type { RoundDoc, UserDoc } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request) {
+async function handle(req: Request) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
 
@@ -68,4 +68,15 @@ export async function POST(req: Request) {
     reveal,
     stats: { score: user?.score ?? 0, played: user?.played ?? 0, correct: user?.correct ?? 0 },
   });
+}
+
+// Any failure (for example the database being unreachable) still returns JSON,
+// so the browser shows a readable message instead of "Unexpected end of JSON input".
+export async function POST(req: Request) {
+  try {
+    return await handle(req);
+  } catch (err) {
+    console.error("predict route error:", err);
+    return NextResponse.json({ error: "Could not save your prediction. Try again." }, { status: 502 });
+  }
 }

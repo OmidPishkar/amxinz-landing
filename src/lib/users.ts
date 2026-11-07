@@ -19,3 +19,11 @@ export async function getUserById(id: string) {
   const db = await getDb();
   return db.collection<UserDoc>("users").findOne({ _id: new ObjectId(id) });
 }
+
+const USERNAME_RE = /^[a-z][a-z0-9_]{2,19}$/;
+
+export async function getUserByUsername(username: string) {
+  if (!USERNAME_RE.test(username)) return null;
+  const db = await getDb();
+  return db.collection<UserDoc>("users").findOne({ username });
+}

@@ -9,6 +9,8 @@ import { JsonLd } from "@/components/json-ld";
 import { pageMetadata } from "@/lib/seo";
 import { leaderboardSchema } from "@/lib/schema";
 import { POINTS_CORRECT } from "@/lib/game";
+import { ChallengeBadges } from "@/components/badges/challenge-badges";
+import { finalizeEndedChallenges, getBadgesForUsers } from "@/lib/challenge-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,9 @@ export default async function LeaderboardPage() {
     .sort({ score: -1, correct: -1, played: 1 })
     .limit(50)
     .toArray();
+
+  await finalizeEndedChallenges();
+  const badges = await getBadgesForUsers(rows.map((u) => u._id.toString()));
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -83,7 +88,14 @@ export default async function LeaderboardPage() {
                     <td className="px-3 py-2">
                       <span className="flex items-center gap-2">
                         <Avatar name={u.name} image={u.avatarUrl ?? u.image} />
-                        <span className="truncate">{u.name}</span>
+                        {u.profilePublic && u.username ? (
+                          <Link href={`/u/${u.username}`} className="truncate hover:underline">
+                            {u.name}
+                          </Link>
+                        ) : (
+                          <span className="truncate">{u.name}</span>
+                        )}
+                        <ChallengeBadges counts={badges.get(u._id.toString())} />
                         {isMe && <span className="text-xs text-muted-foreground">(you)</span>}
                       </span>
                     </td>

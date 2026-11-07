@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { SITE, SITE_URL } from "@/config/site";
 import { listPostsForSitemap, listAllTags } from "@/lib/blog";
 
+// Without this, Next renders the sitemap once at build time (it only reads the database,
+// nothing "dynamic"), so posts published after a deploy never appeared in it.
+export const dynamic = "force-dynamic";
+
 // Only public, indexable pages. /api/* is intentionally excluded.
 // Touches the database for blog content, so a Mongo hiccup must degrade to a smaller
 // sitemap rather than fail the whole route.

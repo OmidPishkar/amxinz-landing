@@ -14,7 +14,7 @@ const globalForTtl = globalThis as unknown as { _roundTtlIdx?: Promise<unknown> 
 
 // Returns a random real chart. The outcome stays on the server until the player answers.
 // Guests can play too (their rounds are not tied to an account and delete themselves after 24h).
-export async function GET(req: Request) {
+async function handle(req: Request) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
 
@@ -53,6 +53,17 @@ export async function GET(req: Request) {
     });
   } catch (err) {
     console.error("round error:", err);
+    return NextResponse.json({ error: "Could not load market data. Try again." }, { status: 502 });
+  }
+}
+
+// Any failure (for example the database being unreachable) still returns JSON,
+// so the browser shows a readable message instead of "Unexpected end of JSON input".
+export async function GET(req: Request) {
+  try {
+    return await handle(req);
+  } catch (err) {
+    console.error("round route error:", err);
     return NextResponse.json({ error: "Could not load market data. Try again." }, { status: 502 });
   }
 }
