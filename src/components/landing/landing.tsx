@@ -1,10 +1,18 @@
 import Link from "next/link";
+<<<<<<< HEAD
+import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AdFrame } from "@/components/ad-frame";
+import { JsonLd } from "@/components/json-ld";
+import { Game } from "@/components/game/game";
+=======
 import { ChevronDown, TrendingDown, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoginDialog } from "@/components/login-dialog";
 import { AdFrame } from "@/components/ad-frame";
 import { JsonLd } from "@/components/json-ld";
 import { HeroChart } from "./hero-chart";
+>>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
 import { HAS_IFRAME_AD } from "@/lib/ads";
 import { HORIZON, POINTS_CORRECT, VISIBLE_CANDLES } from "@/lib/game";
 import { FAQ } from "@/config/faq";
@@ -37,15 +45,30 @@ export function Landing() {
           Decide whether the market goes up or down, score points when you are right, and climb the leaderboard.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
+<<<<<<< HEAD
+          <Button asChild size="lg">
+            <a href="#play">Play now, no account needed</a>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href="/challenges">Challenges</Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
+            <Link href="/leaderboard">Leaderboard</Link>
+=======
           <LoginDialog>
             <Button size="lg">Log in to play</Button>
           </LoginDialog>
           <Button asChild variant="outline" size="lg">
             <Link href="/leaderboard">See the leaderboard</Link>
+>>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
           </Button>
         </div>
       </section>
 
+<<<<<<< HEAD
+      <section id="play" aria-label="Play a round" className="scroll-mt-16 pb-16">
+        <Game guest initialStats={{ score: 0, played: 0, correct: 0 }} />
+=======
       <section aria-label="Sample round" className="pb-16">
         <div className="overflow-hidden rounded-lg border">
           <div className="flex items-center justify-between border-b px-3 py-2 text-xs text-muted-foreground">
@@ -73,6 +96,7 @@ export function Landing() {
             </div>
           </div>
         </div>
+>>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
       </section>
 
       <section aria-labelledby="how-it-works" className="pb-16">

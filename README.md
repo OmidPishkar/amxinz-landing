@@ -153,3 +153,31 @@ Unique handle, 3-20 chars (lowercase letters, numbers, underscore, starting with
 ## Date range filter (`/profile#predictions`)
 
 Presets (All time / Today / This week / This month) plus a custom "From/To" date picker, all clamped so a player can never filter earlier than their own signup date. Combines with the existing correct/wrong filter and pagination via the URL's `from`/`to`/`result`/`page` params.
+<<<<<<< HEAD
+
+## Weblog (`/weblog`)
+
+Public, no login required.
+
+- **Posts**: banner image, title, Markdown body, optional Markdown footer, tags, optional custom SEO description (falls back to an auto-generated excerpt). Draft posts (`published: false`) stay visible only to the admin, previewed at their real URL.
+- **Admin-only creation/editing**: gated by `isAdminSession()` in `src/lib/admin.ts`, which checks the signed-in account's own **confirmed** email (via the profile page's existing "Confirm email" flow) against `ADMIN_EMAILS` in `.env`. This is enforced in the API routes themselves (`/api/weblog`, `/api/weblog/[id]`), not just hidden in the UI. To become an admin: log in, go to `/profile`, confirm the exact email listed in `ADMIN_EMAILS` (comma-separated for more than one admin).
+- **Tags**: each tag gets its own indexable archive page at `/weblog/tag/[tag]` (real posts, real internal links — the actual SEO mechanism; the `<meta keywords>` tag itself does nothing for Google ranking, so we don't rely on it).
+- **SEO per post**: canonical URL, Open Graph/Twitter card using the post's own banner, JSON-LD `BlogPosting` + `BreadcrumbList`, included in `sitemap.xml` with each post's real `updatedAt`. `/weblog/new` and every `/weblog/*/edit` page are `noindex` and blocked in `robots.txt`.
+- Ranking well is never guaranteed by technical SEO alone — it also depends on content quality, backlinks, and competition for those keywords.
+
+Header navigation is now a hamburger menu (`src/components/hamburger-menu.tsx`): Profile/Log in, Weblog, Leaderboard.
+
+New dependencies: `marked` (Markdown → HTML) and `isomorphic-dompurify` (sanitizes that HTML before it's rendered).
+
+## Guest play and challenges
+
+**Guests** can play solo rounds on `/` without an account (the static sample chart on the landing page is now the real game). Their score lives only in the browser. Guest rounds are tied to no account and, like every unanswered round, delete themselves after 24 hours (TTL index on `rounds.expiresAt`; a logged-in player's answered rounds are kept for their history). `/api/round` and `/api/predict` are rate limited per IP for guests and per user for players.
+
+**Challenges** (`/challenges`, login required to join or create; noindex):
+- A creator picks a title, how long it stays open (1/3/7 days) and whether it is listed publicly, then shares the link. The 10 charts are fetched from Binance once, at creation, so every player gets the same ones. Constants live in `src/lib/game.ts` (`CHALLENGE_SIZE`, `CHALLENGE_DAYS`).
+- Play is asynchronous: players answer in order, at their own pace. The server sends one chart at a time and reveals the future candles only after an answer. Each answer is an atomic update, so double clicks, replays and skipping ahead change nothing.
+- Same scoring as solo play (+10 / -10). Ranking: score, then correct calls, then total time. Challenge results are separate from the global leaderboard and profile history.
+- One full-screen ad after the 5th chart (`AD_EVERY_PREDICTIONS`).
+- Creating a challenge is limited to 5 per hour per user (it costs 10 Binance requests).
+=======
+>>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7

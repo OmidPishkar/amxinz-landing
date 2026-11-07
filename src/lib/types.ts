@@ -33,7 +33,11 @@ export interface CandleDoc {
 
 export interface RoundDoc {
   _id: ObjectId;
+<<<<<<< HEAD
+  userId: string | null; // null = guest round
+=======
   userId: string;
+>>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
   symbol: string;
   interval: string;
   startTime: number;
@@ -44,6 +48,10 @@ export interface RoundDoc {
   correct?: boolean;
   createdAt: Date;
   answeredAt?: Date;
+<<<<<<< HEAD
+  expiresAt?: Date; // TTL: unanswered rounds and all guest rounds delete themselves
+=======
+>>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
 }
 
 export interface EmailTokenDoc {
@@ -74,3 +82,44 @@ export interface BlogPostDoc {
   createdAt: Date;
   updatedAt: Date;
 }
+<<<<<<< HEAD
+
+export interface ChallengeItem {
+  symbol: string;
+  interval: string;
+  startTime: number;
+  outcome: "up" | "down";
+  visible: CandleDoc[];
+  future: CandleDoc[];
+}
+
+export interface ChallengeDoc {
+  _id: ObjectId;
+  code: string; // short, url-safe, unique: /challenges/<code>
+  title: string;
+  creatorId: string;
+  isPublic: boolean;
+  items: ChallengeItem[]; // the same charts for every player; never sent to the browser as a whole
+  createdAt: Date;
+  endsAt: Date;
+}
+
+export interface ChallengeAnswer {
+  index: number;
+  choice: "up" | "down";
+  correct: boolean;
+  answeredAt: Date;
+}
+
+export interface ChallengeEntryDoc {
+  _id: ObjectId;
+  challengeCode: string;
+  userId: string;
+  startedAt: Date;
+  answers: ChallengeAnswer[];
+  score: number;
+  correct: number;
+  finishedAt: Date | null;
+}
+=======
+>>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
