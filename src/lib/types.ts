@@ -33,11 +33,7 @@ export interface CandleDoc {
 
 export interface RoundDoc {
   _id: ObjectId;
-<<<<<<< HEAD
   userId: string | null; // null = guest round
-=======
-  userId: string;
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
   symbol: string;
   interval: string;
   startTime: number;
@@ -48,10 +44,7 @@ export interface RoundDoc {
   correct?: boolean;
   createdAt: Date;
   answeredAt?: Date;
-<<<<<<< HEAD
   expiresAt?: Date; // TTL: unanswered rounds and all guest rounds delete themselves
-=======
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
 }
 
 export interface EmailTokenDoc {
@@ -82,7 +75,6 @@ export interface BlogPostDoc {
   createdAt: Date;
   updatedAt: Date;
 }
-<<<<<<< HEAD
 
 export interface ChallengeItem {
   symbol: string;
@@ -121,5 +113,3 @@ export interface ChallengeEntryDoc {
   correct: number;
   finishedAt: Date | null;
 }
-=======
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7

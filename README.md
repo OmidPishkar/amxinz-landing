@@ -153,7 +153,6 @@ Unique handle, 3-20 chars (lowercase letters, numbers, underscore, starting with
 ## Date range filter (`/profile#predictions`)
 
 Presets (All time / Today / This week / This month) plus a custom "From/To" date picker, all clamped so a player can never filter earlier than their own signup date. Combines with the existing correct/wrong filter and pagination via the URL's `from`/`to`/`result`/`page` params.
-<<<<<<< HEAD
 
 ## Weblog (`/weblog`)
 
@@ -179,5 +178,3 @@ New dependencies: `marked` (Markdown → HTML) and `isomorphic-dompurify` (sanit
 - Same scoring as solo play (+10 / -10). Ranking: score, then correct calls, then total time. Challenge results are separate from the global leaderboard and profile history.
 - One full-screen ad after the 5th chart (`AD_EVERY_PREDICTIONS`).
 - Creating a challenge is limited to 5 per hour per user (it costs 10 Binance requests).
-=======
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7

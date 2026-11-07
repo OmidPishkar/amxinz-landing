@@ -5,10 +5,7 @@ import { Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CandleChart, type Candle } from "./candle-chart";
 import { AdBreak } from "./ad-break";
-<<<<<<< HEAD
 import { LoginDialog } from "@/components/login-dialog";
-=======
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
 import { AD_PROVIDER } from "@/lib/ads";
 import { AD_EVERY_PREDICTIONS, HORIZON } from "@/lib/game";
 import { cn } from "@/lib/utils";
@@ -23,11 +20,7 @@ type Result = {
   delta: number;
   future: Candle[];
   reveal: { symbol: string; interval: string; startTime: number };
-<<<<<<< HEAD
   stats: Stats | null; // null for guests: their total only lives in the browser
-=======
-  stats: Stats;
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
 };
 
 const REVEAL_MS = 140;
@@ -45,11 +38,7 @@ function formatDate(ms: number) {
   });
 }
 
-<<<<<<< HEAD
 export function Game({ initialStats, guest = false }: { initialStats: Stats; guest?: boolean }) {
-=======
-export function Game({ initialStats }: { initialStats: Stats }) {
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
   const [stats, setStats] = useState(initialStats);
   const [round, setRound] = useState<Round | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -105,7 +94,6 @@ export function Game({ initialStats }: { initialStats: Stats }) {
       if (!res.ok) throw new Error(data.error ?? "Could not save your prediction.");
 
       setResult({ ...data, choice: direction });
-<<<<<<< HEAD
       if (data.stats) setStats(data.stats);
       else
         setStats((s) => ({
@@ -113,9 +101,6 @@ export function Game({ initialStats }: { initialStats: Stats }) {
           played: s.played + 1,
           correct: s.correct + (data.correct ? 1 : 0),
         }));
-=======
-      setStats(data.stats);
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
 
       let i = 0;
       timer.current = setInterval(() => {
@@ -152,11 +137,7 @@ export function Game({ initialStats }: { initialStats: Stats }) {
   const canAnswer = !!round && !result && !loading && !submitting;
 
   return (
-<<<<<<< HEAD
     <div className={guest ? undefined : "mx-auto max-w-4xl px-4 py-8"}>
-=======
-    <div className="mx-auto max-w-4xl px-4 py-8">
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
       <dl className="mb-6 grid grid-cols-3 gap-px overflow-hidden rounded-lg border bg-border">
         {[
           ["Score", stats.score],
@@ -245,7 +226,6 @@ export function Game({ initialStats }: { initialStats: Stats }) {
         </div>
       </div>
 
-<<<<<<< HEAD
       {guest && (
         <p className="mt-3 text-[13px] text-muted-foreground">
           Playing as a guest, so your score is not saved.{" "}
@@ -256,8 +236,6 @@ export function Game({ initialStats }: { initialStats: Stats }) {
         </p>
       )}
 
-=======
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
       {showAd && <AdBreak onClose={() => setShowAd(false)} />}
     </div>
   );

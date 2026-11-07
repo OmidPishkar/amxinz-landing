@@ -1,18 +1,9 @@
 import Link from "next/link";
-<<<<<<< HEAD
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdFrame } from "@/components/ad-frame";
 import { JsonLd } from "@/components/json-ld";
 import { Game } from "@/components/game/game";
-=======
-import { ChevronDown, TrendingDown, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { LoginDialog } from "@/components/login-dialog";
-import { AdFrame } from "@/components/ad-frame";
-import { JsonLd } from "@/components/json-ld";
-import { HeroChart } from "./hero-chart";
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
 import { HAS_IFRAME_AD } from "@/lib/ads";
 import { HORIZON, POINTS_CORRECT, VISIBLE_CANDLES } from "@/lib/game";
 import { FAQ } from "@/config/faq";
@@ -45,7 +36,6 @@ export function Landing() {
           Decide whether the market goes up or down, score points when you are right, and climb the leaderboard.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
-<<<<<<< HEAD
           <Button asChild size="lg">
             <a href="#play">Play now, no account needed</a>
           </Button>
@@ -54,49 +44,12 @@ export function Landing() {
           </Button>
           <Button asChild variant="outline" size="lg">
             <Link href="/leaderboard">Leaderboard</Link>
-=======
-          <LoginDialog>
-            <Button size="lg">Log in to play</Button>
-          </LoginDialog>
-          <Button asChild variant="outline" size="lg">
-            <Link href="/leaderboard">See the leaderboard</Link>
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
           </Button>
         </div>
       </section>
 
-<<<<<<< HEAD
       <section id="play" aria-label="Play a round" className="scroll-mt-16 pb-16">
         <Game guest initialStats={{ score: 0, played: 0, correct: 0 }} />
-=======
-      <section aria-label="Sample round" className="pb-16">
-        <div className="overflow-hidden rounded-lg border">
-          <div className="flex items-center justify-between border-b px-3 py-2 text-xs text-muted-foreground">
-            <span>Sample round · 1h candles</span>
-            <span>Asset and date hidden</span>
-          </div>
-          <div className="p-3 sm:p-4">
-            <HeroChart />
-          </div>
-          <div className="flex flex-col gap-3 border-t p-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-[13px] text-muted-foreground">
-              Higher or lower than the last candle, {HORIZON} candles from now?
-            </p>
-            <div className="flex gap-2">
-              <LoginDialog>
-                <Button variant="up" className="flex-1 sm:flex-none">
-                  <TrendingUp /> Up
-                </Button>
-              </LoginDialog>
-              <LoginDialog>
-                <Button variant="down" className="flex-1 sm:flex-none">
-                  <TrendingDown /> Down
-                </Button>
-              </LoginDialog>
-            </div>
-          </div>
-        </div>
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
       </section>
 
       <section aria-labelledby="how-it-works" className="pb-16">

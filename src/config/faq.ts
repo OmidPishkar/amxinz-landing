@@ -16,13 +16,10 @@ export const FAQ = [
     a: `You predict whether the close ${HORIZON} candles after the last visible candle will be higher or lower. A correct call earns ${POINTS_CORRECT} points and a wrong call costs ${POINTS_CORRECT}. Your total score decides your rank on the leaderboard.`,
   },
   {
-<<<<<<< HEAD
     q: "Do I need an account to play?",
     a: "No. You can play rounds right away as a guest. Log in to save your score, appear on the leaderboard and join challenges against other players.",
   },
   {
-=======
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
     q: "Do I need a crypto wallet to play?",
     a: "No. You can log in with Google, or sign a message with an EVM wallet such as MetaMask. Signing never sends a transaction and costs no gas.",
   },

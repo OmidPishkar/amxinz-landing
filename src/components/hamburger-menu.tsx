@@ -82,10 +82,7 @@ export function HamburgerMenu({
             <LoginDialog>
               <button
                 role="menuitem"
-<<<<<<< HEAD
-                onClick={() => setOpen(true)}
-=======
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
+                onClick={close}
                 className="block w-full px-3 py-2 text-left text-[13px] hover:bg-accent"
               >
                 Log in
@@ -95,7 +92,6 @@ export function HamburgerMenu({
 
           <div className="my-1 border-t" />
 
-<<<<<<< HEAD
           <Link
             role="menuitem"
             href="/challenges"
@@ -104,8 +100,6 @@ export function HamburgerMenu({
           >
             Challenges
           </Link>
-=======
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
           <Link role="menuitem" href="/weblog" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">
             Weblog
           </Link>

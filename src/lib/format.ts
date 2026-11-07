@@ -5,7 +5,6 @@ export const formatAsset = (symbol: string) => symbol.replace(/USDT$/, "/USDT");
 export function formatChartDate(ms: number) {
   return new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
-<<<<<<< HEAD
 
 /** "2d 4h left", "5h left", "12m left", or "Ended". */
 export function timeLeft(endsAt: Date, now = new Date()) {
@@ -26,5 +25,3 @@ export function formatDuration(ms: number) {
   const s = total % 60;
   return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}:${String(s).padStart(2, "0")}`;
 }
-=======
->>>>>>> 7bcaed3947e2fda50ba2ff29e12b2bfd18c98be7
