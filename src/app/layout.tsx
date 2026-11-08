@@ -7,6 +7,9 @@ import { Footer } from "@/components/footer";
 import { JsonLd } from "@/components/json-ld";
 import { SITE, SITE_URL } from "@/config/site";
 import { siteSchema } from "@/lib/schema";
+import { Analytics } from "@/components/analytics";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
@@ -48,7 +51,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions);
   return (
     <html lang={SITE.language} suppressHydrationWarning>
       <body className={`${inter.variable} flex min-h-screen flex-col font-sans`}>
@@ -65,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
         </ThemeProvider>
+        <Analytics loggedIn={!!session?.user?.id} />
         <JsonLd data={siteSchema()} />
       </body>
     </html>

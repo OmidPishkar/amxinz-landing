@@ -220,7 +220,7 @@ export function ChallengePlay({ code }: { code: string }) {
           ) : !revealDone ? (
             <p className="text-[13px] text-muted-foreground">Revealing the next candles…</p>
           ) : (
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex animate-in fade-in slide-in-from-bottom-1 flex-wrap items-center justify-between gap-3 duration-300">
               <p className="text-[13px]">
                 <span className={cn("font-medium", result.correct ? "text-up" : "text-down")}>
                   {result.correct ? "Correct" : "Wrong"} ({result.delta > 0 ? "+" : ""}

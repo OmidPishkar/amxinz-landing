@@ -1,3 +1,4 @@
+import { ADS_ENABLED } from "@/lib/ads";
 import { AD_EVERY_PREDICTIONS, HORIZON, POINTS_CORRECT, VISIBLE_CANDLES } from "@/lib/game";
 
 // Shown on the landing page AND emitted as FAQPage structured data,
@@ -5,7 +6,9 @@ import { AD_EVERY_PREDICTIONS, HORIZON, POINTS_CORRECT, VISIBLE_CANDLES } from "
 export const FAQ = [
   {
     q: "Is Amxinz free to play?",
-    a: `Yes. Playing is free and there is nothing to deposit. A full-screen ad appears after every ${AD_EVERY_PREDICTIONS} predictions to cover running costs.`,
+    a: ADS_ENABLED
+      ? `Yes. Playing is free and there is nothing to deposit. A full-screen ad appears after every ${AD_EVERY_PREDICTIONS} predictions to cover running costs.`
+      : "Yes. Playing is free, there is nothing to deposit, and there are no ads.",
   },
   {
     q: "Are the charts real?",

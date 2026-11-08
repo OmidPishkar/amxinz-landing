@@ -18,6 +18,7 @@ export function HamburgerMenu({
   image: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const close = () => setOpen(false);
 
@@ -50,10 +51,12 @@ export function HamburgerMenu({
         {open ? <X /> : <Menu />}
       </Button>
 
+      {!loggedIn && <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />}
+
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 overflow-hidden rounded-lg border bg-popover py-1 text-popover-foreground shadow-lg"
+          className="absolute animate-in fade-in zoom-in-95 slide-in-from-top-1 duration-150 right-0 top-[calc(100%+8px)] z-50 w-56 overflow-hidden rounded-lg border bg-popover py-1 text-popover-foreground shadow-lg"
         >
           {loggedIn ? (
             <>
@@ -79,15 +82,16 @@ export function HamburgerMenu({
               </button>
             </>
           ) : (
-            <LoginDialog>
-              <button
-                role="menuitem"
-                onClick={() => setOpen(true)}
-                className="block w-full px-3 py-2 text-left text-[13px] hover:bg-accent"
-              >
-                Log in
-              </button>
-            </LoginDialog>
+            <button
+              role="menuitem"
+              onClick={() => {
+                close();
+                setLoginOpen(true);
+              }}
+              className="block w-full px-3 py-2 text-left text-[13px] hover:bg-accent"
+            >
+              Log in
+            </button>
           )}
 
           <div className="my-1 border-t" />

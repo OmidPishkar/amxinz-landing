@@ -22,8 +22,10 @@ export async function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b bg-background">
       <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <Logo />
+        <Link href="/" className="group flex items-center gap-2">
+          <span className="transition-transform duration-300 group-hover:rotate-6 group-hover:scale-105">
+            <Logo />
+          </span>
           <span className="text-[15px] font-semibold tracking-tight">Amxinz</span>
         </Link>
         <div className="flex items-center gap-1">

@@ -28,9 +28,24 @@ function GoogleIcon() {
   );
 }
 
-export function LoginDialog({ children }: { children: React.ReactNode }) {
+// Works two ways: wrap a trigger button (uncontrolled), or mount it once and drive it with
+// open / onOpenChange (needed when the trigger lives in something that unmounts, like a menu).
+export function LoginDialog({
+  children,
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
   const [busy, setBusy] = useState<"google" | "wallet" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,7 +99,7 @@ export function LoginDialog({ children }: { children: React.ReactNode }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent>
         <DialogTitle>Log in to Amxinz</DialogTitle>
         <DialogDescription>Choose how you want to sign in. You can play right after.</DialogDescription>

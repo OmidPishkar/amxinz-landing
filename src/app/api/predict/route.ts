@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { clientIp } from "@/lib/client-ip";
 import { rateLimit } from "@/lib/rate-limit";
+import { recordEvent } from "@/lib/analytics";
 import { POINTS_CORRECT, POINTS_WRONG } from "@/lib/game";
 import type { RoundDoc, UserDoc } from "@/lib/types";
 
@@ -51,6 +52,7 @@ async function handle(req: Request) {
 
   // Guests have no saved score: the browser keeps their running total for the session.
   if (!userId) {
+    await recordEvent({ type: "guest_round" });
     return NextResponse.json({ correct, outcome: round.outcome, delta, future: round.future, reveal, stats: null });
   }
 

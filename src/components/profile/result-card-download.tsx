@@ -2,11 +2,23 @@
 
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
+import qrcode from "qrcode-generator";
 import { Button } from "@/components/ui/button";
+import type { BadgeCounts } from "@/lib/challenge-stats";
 import { SITE, SITE_URL } from "@/config/site";
+
+export interface ChallengeLine {
+  title: string;
+  rank: string; // e.g. "2nd of 7"
+  points: number;
+}
 
 export interface ResultCardData {
   name: string;
+  username: string | null; // when set, a QR code to /u/<username> is drawn on the card
+  challenges: ChallengeLine[]; // newest finished challenges, up to 3
+  challengeSummary: { joined: number; finished: number };
+  badges: BadgeCounts;
   avatarUrl: string | null;
   score: number;
   played: number;
@@ -73,6 +85,111 @@ function drawCircleImage(ctx: CanvasRenderingContext2D, img: HTMLImageElement, c
   ctx.restore();
 }
 
+const FONT = "Inter, -apple-system, Segoe UI, sans-serif";
+
+function fit(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let t = text;
+  while (t.length > 1 && ctx.measureText(`${t}…`).width > maxWidth) t = t.slice(0, -1);
+  return `${t.trimEnd()}…`;
+}
+
+// Draws the code module by module (no image, no extra request), so it stays sharp at any size.
+function drawQr(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number) {
+  const qr = qrcode(0, "M");
+  qr.addData(text);
+  qr.make();
+  const n = qr.getModuleCount();
+  const m = Math.floor(size / n);
+  const offset = Math.floor((size - m * n) / 2);
+
+  roundRect(ctx, x - 12, y - 12, size + 24, size + 24, 12);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.strokeStyle = BORDER;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = INK;
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (qr.isDark(r, c)) ctx.fillRect(x + offset + c * m, y + offset + r * m, m, m);
+    }
+  }
+}
+
+function drawChallenges(ctx: CanvasRenderingContext2D, data: ResultCardData, qrUrl: string | null) {
+  const top = 960;
+  const right = qrUrl ? 740 : W - 80;
+
+  ctx.fillStyle = MUTED;
+  ctx.font = `500 26px ${FONT}`;
+  ctx.fillText("Challenges", 80, top);
+
+  // Podium badges next to the heading.
+  let bx = 80 + ctx.measureText("Challenges").width + 24;
+  const coins: [number, string][] = [
+    [data.badges.gold, "#f59e0b"],
+    [data.badges.silver, "#a1a1aa"],
+    [data.badges.bronze, "#c2763e"],
+  ];
+  for (const [count, color] of coins) {
+    if (count <= 0) continue;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(bx + 14, top - 9, 14, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `700 16px ${FONT}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(count), bx + 14, top - 8);
+    ctx.restore();
+    bx += 38;
+  }
+
+  ctx.fillStyle = MUTED;
+  ctx.font = `500 24px ${FONT}`;
+  const { joined, finished } = data.challengeSummary;
+  ctx.fillText(joined > 0 ? `Joined ${joined} · Finished ${finished}` : "No challenges yet", 80, top + 42);
+
+  data.challenges.slice(0, 3).forEach((c, i) => {
+    const y = top + 94 + i * 46;
+    const result = `${c.rank ? `${c.rank} · ` : ""}${c.points} pts`;
+    ctx.font = `500 26px ${FONT}`;
+    const resultWidth = ctx.measureText(result).width;
+    ctx.font = `600 30px ${FONT}`;
+    ctx.fillStyle = INK;
+    ctx.fillText(fit(ctx, c.title, right - 80 - resultWidth - 24), 80, y);
+    ctx.font = `500 26px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    ctx.textAlign = "right";
+    ctx.fillText(result, right, y);
+    ctx.textAlign = "left";
+  });
+
+  if (qrUrl && data.username) {
+    const size = 190;
+    const x = W - 80 - 12 - size;
+    try {
+      drawQr(ctx, qrUrl, x, top - 4, size);
+      ctx.fillStyle = MUTED;
+      ctx.textAlign = "center";
+      let fontSize = 24;
+      ctx.font = `500 ${fontSize}px ${FONT}`;
+      while (ctx.measureText(`@${data.username}`).width > 230 && fontSize > 14) {
+        fontSize -= 1;
+        ctx.font = `500 ${fontSize}px ${FONT}`;
+      }
+      ctx.fillText(`@${data.username}`, x + size / 2, top + 236);
+      ctx.textAlign = "left";
+    } catch {
+      /* a QR failure must never block the download */
+    }
+  }
+}
+
 function draw(ctx: CanvasRenderingContext2D, data: ResultCardData, logo: HTMLImageElement | null, avatar: HTMLImageElement | null) {
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = "#ffffff";
@@ -109,7 +226,7 @@ function draw(ctx: CanvasRenderingContext2D, data: ResultCardData, logo: HTMLIma
   // Title
   ctx.fillStyle = MUTED;
   ctx.font = "500 30px Inter, -apple-system, Segoe UI, sans-serif";
-  ctx.fillText(`${data.name}'s chart-reading report`, 80, 230);
+  ctx.fillText(`${data.username ? `@${data.username}` : data.name}'s chart-reading report`, 80, 230);
 
   // Big win rate
   const hasData = data.played > 0;
@@ -167,6 +284,8 @@ function draw(ctx: CanvasRenderingContext2D, data: ResultCardData, logo: HTMLIma
       ctx.fill();
     });
   }
+
+  drawChallenges(ctx, data, data.username ? `${SITE_URL}/u/${data.username}` : null);
 
   // Footer
   ctx.fillStyle = MUTED;

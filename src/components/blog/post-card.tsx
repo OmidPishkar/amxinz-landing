@@ -13,7 +13,7 @@ export function PostCard({
   post: Pick<BlogPostDoc, "slug" | "title" | "bannerUrl" | "tags" | "createdAt" | "metaDescription">;
 }) {
   return (
-    <article className="overflow-hidden rounded-lg border transition-colors hover:border-foreground/20">
+    <article className="overflow-hidden rounded-lg border transition duration-200 hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-sm">
       <Link href={`/weblog/${post.slug}`} className="block">
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
           <Image src={post.bannerUrl} alt="" fill unoptimized className="object-cover" />

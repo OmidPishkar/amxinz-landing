@@ -22,6 +22,9 @@ import { ResultCardDownload } from "@/components/profile/result-card-download";
 import { PdfDownloadButton } from "@/components/profile/pdf-download-button";
 import { formatAsset, formatChartDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { isAdminSession } from "@/lib/admin";
+import { ordinal } from "@/lib/format";
 import type { DateRange } from "@/lib/profile";
 
 export const dynamic = "force-dynamic";
@@ -126,7 +129,8 @@ export default async function ProfilePage({
   const isActivePreset = (preset: { from: string; to: string }) => preset.from === fromStr && preset.to === toStr;
 
   await finalizeEndedChallenges();
-  const [{ rows, total, pages, page }, form, perf, activity, badges] = await Promise.all([
+  const [admin, { rows, total, pages, page }, form, perf, activity, badges] = await Promise.all([
+    isAdminSession(session),
     getPredictionPage(session.user.id, requestedPage, filter, range),
     getRecentForm(session.user.id),
     getPerformanceStats(session.user.id),
@@ -148,7 +152,21 @@ export default async function ProfilePage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Your profile</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">Your profile</h1>
+        <div className="flex flex-wrap gap-2">
+          {user.username && (
+            <Button asChild variant="outline">
+              <Link href={`/u/${user.username}`}>View public page</Link>
+            </Button>
+          )}
+          {admin && (
+            <Button asChild>
+              <Link href="/admin">Admin panel</Link>
+            </Button>
+          )}
+        </div>
+      </div>
       <p className="mt-1 text-muted-foreground">
         Signed in with {user.provider === "google" ? "Google" : "a wallet"} as {user.name}
         {user.username ? <> · <span className="text-foreground">@{user.username}</span></> : null}.
@@ -244,6 +262,17 @@ export default async function ProfilePage({
           <ResultCardDownload
             data={{
               name: user.name,
+              username: user.username ?? null,
+              challenges: activity.items
+                .filter((i) => i.status === "finished")
+                .slice(0, 3)
+                .map((i) => ({
+                  title: i.title,
+                  rank: i.rank ? `${ordinal(i.rank)} of ${i.finishers}` : "",
+                  points: i.score,
+                })),
+              challengeSummary: { joined: activity.played, finished: activity.finished },
+              badges: badges.get(session.user.id) ?? { gold: 0, silver: 0, bronze: 0 },
               avatarUrl: user.avatarUrl ?? session.user.image ?? null,
               score: user.score,
               played: user.played,
@@ -256,9 +285,19 @@ export default async function ProfilePage({
           <PdfDownloadButton />
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          The image is sized for sharing (e.g. Instagram). The PDF lists your last{" "}
+          The image is sized for sharing (e.g. Instagram) and shows your challenge results
+          {user.username ? ", with a QR code to your public page" : ""}. The PDF lists your last{" "}
           {perf.played > 1000 ? "1,000" : perf.played} predictions.
         </p>
+        {user.username && user.profilePublic !== true && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Your page is private, so the QR code opens a &ldquo;This page is private&rdquo; message. Make it public in
+            &ldquo;Public page&rdquo; above to share it.
+          </p>
+        )}
+        {!user.username && (
+          <p className="mt-1 text-xs text-muted-foreground">Pick a username to add a QR code to the image.</p>
+        )}
       </section>
 
       <section id="predictions" aria-labelledby="predictions-heading" className="mt-8 scroll-mt-16 border-t pt-6">

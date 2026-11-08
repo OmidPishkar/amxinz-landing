@@ -83,7 +83,11 @@ export default async function LeaderboardPage() {
               {rows.map((u, i) => {
                 const isMe = session?.user?.id === u._id.toString();
                 return (
-                  <tr key={u._id.toString()} className={cn("border-b last:border-0", isMe && "bg-muted")}>
+                  <tr
+                    key={u._id.toString()}
+                    style={{ animationDelay: `${Math.min(i, 14) * 35}ms` }}
+                    className={cn("animate-in fade-in fill-mode-backwards border-b duration-500 last:border-0", isMe && "bg-muted")}
+                  >
                     <td className="px-3 py-2 tabular-nums text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-2">
                       <span className="flex items-center gap-2">

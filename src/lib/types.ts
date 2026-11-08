@@ -16,6 +16,18 @@ export interface UserDoc {
   emailVerified?: boolean;
   username?: string | null; // lowercase, unique; see the "username" index in the username route
   profilePublic?: boolean; // public page at /u/<username>; anything but true means private
+  source?: TrafficSource | null; // where this player first came from (set once, right after signing up)
+}
+
+export type TrafficChannel = "direct" | "search" | "social" | "referral" | "campaign" | "internal";
+
+export interface TrafficSource {
+  label: string; // "instagram", "google", a ?ref= campaign name such as "yt", or "direct"
+  channel: TrafficChannel;
+  ref: string | null;
+  host: string | null;
+  path: string | null;
+  at: Date;
 }
 
 export interface NonceDoc {
@@ -132,4 +144,17 @@ export interface RatingDoc {
   stars: number; // 1-5
   createdAt: Date;
   updatedAt: Date;
+}
+
+// One row per tracked page view (and per guest prediction). Deleted automatically after ~13 months.
+export interface AnalyticsEventDoc {
+  _id: ObjectId;
+  t: Date;
+  type: "pageview" | "guest_round";
+  path?: string;
+  visitorId?: string; // random id kept in the visitor's browser, never tied to an IP
+  userId?: string | null;
+  landing?: boolean; // first page of a browser-tab visit
+  channel?: TrafficChannel;
+  source?: string;
 }

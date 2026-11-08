@@ -146,7 +146,9 @@ export function Game({ initialStats, guest = false }: { initialStats: Stats; gue
         ].map(([label, value]) => (
           <div key={label} className="bg-background px-3 py-2">
             <dt className="text-xs text-muted-foreground">{label}</dt>
-            <dd className="text-lg font-semibold tabular-nums">{value}</dd>
+            <dd key={String(value)} className="animate-pop text-lg font-semibold tabular-nums">
+              {value}
+            </dd>
           </div>
         ))}
       </dl>
@@ -209,7 +211,7 @@ export function Game({ initialStats, guest = false }: { initialStats: Stats; gue
           ) : !revealDone ? (
             <p className="text-[13px] text-muted-foreground">Revealing the next candles…</p>
           ) : (
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex animate-in fade-in slide-in-from-bottom-1 flex-wrap items-center justify-between gap-3 duration-300">
               <p className="text-[13px]">
                 <span className={cn("font-medium", result.correct ? "text-up" : "text-down")}>
                   {result.correct ? "Correct" : "Wrong"} ({result.delta > 0 ? "+" : ""}

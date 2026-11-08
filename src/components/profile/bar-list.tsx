@@ -25,7 +25,7 @@ export function BarList({ title, items, emptyText }: { title: string; items: Bar
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${item.label}: ${item.winRate}% over ${item.played} predictions`}>
                 <div
-                  className="h-full rounded-full"
+                  className="h-full origin-left animate-grow-x rounded-full"
                   style={{
                     width: `${Math.max(2, item.winRate)}%`,
                     background: item.winRate >= 50 ? "var(--up)" : "var(--down)",

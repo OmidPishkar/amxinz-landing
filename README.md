@@ -187,3 +187,30 @@ New dependency: `marked` (Markdown → HTML). There is no sanitizer package: `sr
 - **Star ratings**: logged-in players rate a *public* profile 1-5 (once per player, changeable, removable); you can't rate yourself. The average and count show on the page. Accounts are free, so ratings can be gamed with extra accounts; there is a limit of 60 ratings per hour per player.
 - **Blog editor**: toolbar (bold, italic, headings, link, lists, quote, code, divider, image) with Ctrl+B / Ctrl+I / Ctrl+K and a Write/Preview switch. Posts are still stored as Markdown. Images are uploaded through UploadThing (`blogImage`, admin only) and inserted at the cursor. One `#` in the editor shows as H2 on the page, because the post title is the only H1.
 - **Sitemap**: now `force-dynamic`. Before, Next rendered it once at build time, so posts published after a deploy were missing from it.
+
+## Ads are off (base kept)
+
+Nothing is shown unless `NEXT_PUBLIC_ADS_ENABLED=true`. `src/lib/ads.ts`, `AdBreak`, `AdFrame`, the landing-page slot and the "every 5 predictions" logic are all still in place: to bring ads back, set that variable (plus `NEXT_PUBLIC_AD_PROVIDER` and the iframe settings) in `.env` and Netlify and redeploy. The FAQ answer about ads follows the switch.
+
+## Motion
+
+CSS-only (no animation package): page fade on every navigation (`src/app/template.tsx`), hero candles that grow in, sections that fade in on scroll (`components/motion/reveal.tsx`), charts that draw in, leaderboard rows that appear one by one, press feedback on buttons, hover lift on cards, a score that pops when it changes. Everything is switched off for visitors who prefer reduced motion.
+
+## Traffic tracking
+
+- `components/analytics.tsx` sends one beacon per page view to `/api/track`: the path, a random id kept in the browser's localStorage, and the referrer of the first page of a visit. No cookies, no IP address. Bots are ignored. Open any page with `?notrack=1` to stop counting a browser (your own), `?notrack=0` to count it again.
+- Links with `?ref=yt` (or `?utm_source=`) are counted as that campaign. Without it, the source is guessed from the referrer (Google, Instagram, ...). Instagram and TikTok often hide the referrer, so tag your links (the admin panel has a link builder).
+- The first source is remembered in the browser and credited to a player right after they sign up (`users.source`, set once; accounts older than a day are ignored).
+- Guest predictions are counted as events (they are not stored anywhere else). Events are deleted automatically after about 13 months.
+
+## Admin panel (`/admin`)
+
+Visible only to an admin (confirmed email in `ADMIN_EMAILS`, or a username in `ADMIN_USERNAMES`); everyone else gets a 404. There is an "Admin panel" button on `/profile`. Tabs: Overview (visitors, page views, signed-in visitors, signups, predictions, active players, most active players, each as a day-by-day chart compared with the previous period), Traffic (sources, signups per source, landing pages, campaign link builder), Blog (views, visitors and visits from search engines / social / campaigns per post, plus a daily chart per post), Challenges, Players. Presets (today / 7 / 30 / 90 days) and a custom date range; days are UTC.
+
+Search impressions and keywords only exist in Google Search Console, so "Search" in the Blog tab means visits that arrived from a search engine.
+
+Admin usernames: a username listed in `ADMIN_USERNAMES` can only be taken by an account with a confirmed `ADMIN_EMAILS` address (enforced in the username route), so nobody can become admin by registering it. Confirm your email on `/profile` and claim the username first.
+
+## Result image
+
+The image from `/profile` now also shows challenge results (joined, finished, podium badges, your latest three finished challenges with rank and points). With a username it also draws a QR code to `/u/<username>`, using `qrcode-generator` (no dependencies), drawn straight onto the canvas.

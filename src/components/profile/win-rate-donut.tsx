@@ -30,6 +30,8 @@ export function WinRateDonut({ winRate, played }: { winRate: number; played: num
           stroke={color}
           strokeWidth={STROKE}
           strokeDasharray={`${dash} ${C - dash}`}
+          className="animate-draw-ring"
+          style={{ "--ring": C } as React.CSSProperties}
           strokeLinecap="round"
           transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
         />

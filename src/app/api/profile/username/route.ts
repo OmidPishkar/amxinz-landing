@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { rateLimit } from "@/lib/rate-limit";
+import { hasAdminEmail, isAdminUsername } from "@/lib/admin";
+import { getUserById } from "@/lib/users";
 import type { UserDoc } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +46,15 @@ export async function POST(req: Request) {
   }
   if (RESERVED.has(username)) {
     return NextResponse.json({ error: "That username is reserved." }, { status: 400 });
+  }
+
+  // A username that grants admin access can only be taken by an account that has confirmed
+  // an admin email. Otherwise anyone could register it and become admin.
+  if (isAdminUsername(username)) {
+    const me = await getUserById(session.user.id);
+    if (me?.username !== username && !hasAdminEmail(me)) {
+      return NextResponse.json({ error: "That username is reserved." }, { status: 400 });
+    }
   }
 
   const users = await usersCollection();
