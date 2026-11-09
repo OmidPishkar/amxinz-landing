@@ -11,13 +11,14 @@ async function upsertUser(
   providerId: string,
   name: string,
   image: string | null,
+  email : string | null,
 ) {
   const db = await getDb();
   const user = await db.collection<UserDoc>("users").findOneAndUpdate(
     { provider, providerId },
     {
       $setOnInsert: { score: 0, played: 0, correct: 0, createdAt: new Date() },
-      $set: { name, image },
+      $set: { name, image, email },
     },
     { upsert: true, returnDocument: "after" },
   );
@@ -60,7 +61,7 @@ export const authOptions: NextAuthOptions = {
         }
         if (recovered.toLowerCase() !== address) return null;
 
-        const user = await upsertUser("wallet", address, shortAddress(address), null);
+        const user = await upsertUser("wallet", address, shortAddress(address), null , null);
         return { id: user._id.toString(), name: user.name };
       },
     }),
@@ -75,6 +76,7 @@ export const authOptions: NextAuthOptions = {
             account.providerAccountId,
             user.name ?? "Player",
             user.image ?? null,
+            user.email ?? null,
           );
           token.uid = doc._id.toString();
         } else {

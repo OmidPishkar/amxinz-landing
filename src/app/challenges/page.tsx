@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 // User-generated pages: useful to players, not something to put in search results.
 export const metadata: Metadata = {
   title: "Challenges",
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true },
 };
 
 export default async function ChallengesPage() {
