@@ -96,6 +96,10 @@ export function HamburgerMenu({
 
           <div className="my-1 border-t" />
 
+          <Link role="menuitem" href="/pricing" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">Pricing</Link>
+          <Link role="menuitem" href="/documents" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">Documents</Link>
+          <Link role="menuitem" href="/about" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">About</Link>
+          <Link role="menuitem" href="/faq" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">FAQ</Link>
           <Link
             role="menuitem"
             href="/challenges"
@@ -107,6 +111,14 @@ export function HamburgerMenu({
           <Link role="menuitem" href="/weblog" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">
             Weblog
           </Link>
+          <Link role="menuitem" href="/daily-mission" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">Daily Mission</Link>
+          <Link role="menuitem" href="/skills" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">Skill Assessment</Link>
+          <Link role="menuitem" href="/risk-lab" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">Risk Lab</Link>
+          {loggedIn && <>
+            <Link role="menuitem" href="/personal-missions" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">Personal Missions</Link>
+            <Link role="menuitem" href="/reports/weekly" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">Weekly Report</Link>
+            <Link role="menuitem" href="/referrals" onClick={close} className="block px-3 py-2 text-[13px] hover:bg-accent">Referrals</Link>
+          </>}
           <Link
             role="menuitem"
             href="/leaderboard"

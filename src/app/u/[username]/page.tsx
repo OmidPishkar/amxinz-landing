@@ -15,13 +15,19 @@ import { RatingStars } from "@/components/profile/rating-stars";
 import { WinRateDonut } from "@/components/profile/win-rate-donut";
 import { BarList } from "@/components/profile/bar-list";
 import { FormDots } from "@/components/profile/form-dots";
+import { SITE_URL } from "@/config/site";
 
 export const dynamic = "force-dynamic";
 
-// Player pages are for people who have the link, not for search results.
+// Only profiles explicitly marked public are eligible for indexing.
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
-  const { username } = await params;
-  return { title: `@${username.toLowerCase()}`, robots: { index: false, follow: false } };
+  const { username: raw } = await params;
+  const username = raw.toLowerCase();
+  const user = await getUserByUsername(username);
+  if (!user || user.profilePublic !== true) return { title: `@${username}`, robots: { index: false, follow: false } };
+  const title = `@${username} — Amxinz Trading Profile`;
+  const description = `View @${username}’s public trading practice activity and challenge performance on Amxinz.`;
+  return { title, description, alternates: { canonical: `${SITE_URL}/u/${username}` }, robots: { index: true, follow: true }, openGraph: { type: "profile", title, description, url: `${SITE_URL}/u/${username}` } };
 }
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {

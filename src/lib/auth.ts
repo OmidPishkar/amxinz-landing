@@ -18,7 +18,7 @@ async function upsertUser(
     { provider, providerId },
     {
       $setOnInsert: { score: 0, played: 0, correct: 0, createdAt: new Date() },
-      $set: { name, image, email },
+      $set: { name, image, ...(email ? { email } : {}), ...(emailVerified === undefined ? {} : { emailVerified }) },
     },
     { upsert: true, returnDocument: "after" },
   );
@@ -67,7 +67,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
       // Runs with `account` only on sign-in; afterwards the uid lives in the token.
       if (account && user) {
         if (account.provider === "google") {
@@ -77,6 +77,7 @@ export const authOptions: NextAuthOptions = {
             user.name ?? "Player",
             user.image ?? null,
             user.email ?? null,
+            (profile as { email_verified?: boolean } | undefined)?.email_verified === true,
           );
           token.uid = doc._id.toString();
         } else {

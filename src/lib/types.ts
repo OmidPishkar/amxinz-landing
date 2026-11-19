@@ -16,6 +16,7 @@ export interface UserDoc {
   emailVerified?: boolean;
   username?: string | null; // lowercase, unique; see the "username" index in the username route
   profilePublic?: boolean; // public page at /u/<username>; anything but true means private
+  trialStartedAt?: Date | null;
   source?: TrafficSource | null; // where this player first came from (set once, right after signing up)
 }
 
@@ -51,6 +52,7 @@ export interface RoundDoc {
   interval: string;
   startTime: number;
   outcome: "up" | "down";
+  visible?: CandleDoc[];
   future: CandleDoc[];
   answered: boolean;
   choice?: "up" | "down";

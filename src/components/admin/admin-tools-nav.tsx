@@ -1,0 +1,3 @@
+import Link from "next/link";
+const links=[["Users","/admin/users"],["Revenue","/admin/revenue"],["Subscriptions","/admin/subscriptions"],["Referrals","/admin/referrals"],["Discounts","/admin/discounts"],["Missions","/admin/missions"],["Skills","/admin/skills"],["System","/admin/system"],["Audit Logs","/admin/audit"]] as const;
+export function AdminToolsNav(){return <nav aria-label="Additional admin tools" className="mt-4 flex flex-wrap gap-2">{links.map(([label,href])=><Link key={href} href={href} className="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-muted">{label}</Link>)}</nav>}

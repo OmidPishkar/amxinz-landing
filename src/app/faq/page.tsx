@@ -1,0 +1,5 @@
+import type { Metadata } from "next";
+import { FAQ } from "@/config/faq";
+import { pageMetadata } from "@/lib/seo";
+export const metadata:Metadata=pageMetadata({title:"Frequently asked questions",description:"Answers about Amxinz trading practice, Daily Mission, Skill Assessment, plans, subscriptions and payments.",path:"/faq"});
+export default function FAQPage(){return <div className="mx-auto max-w-3xl px-4 py-14"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">Help center</p><h1 className="mt-2 text-4xl font-semibold tracking-tight">Frequently asked questions</h1><p className="mt-4 text-muted-foreground">Everything you need to understand how Amxinz works.</p><div className="mt-10 divide-y rounded-2xl border">{FAQ.map(item=><details key={item.q} className="group p-5"><summary className="cursor-pointer list-none font-semibold">{item.q}<span className="float-right text-violet-600 group-open:rotate-45">+</span></summary><p className="mt-3 text-sm leading-7 text-muted-foreground">{item.a}</p></details>)}</div></div>}

@@ -14,7 +14,7 @@ function listFromEnv(value: string | undefined, strip = ""): Set<string> {
 // Comma-separated lists in .env:
 //   ADMIN_EMAILS=omidjr17@gmail.com      (the account must have CONFIRMED this email on /profile)
 //   ADMIN_USERNAMES=creator              (an account that holds this username)
-const ADMIN_EMAILS = listFromEnv(process.env.ADMIN_EMAILS);
+const ADMIN_EMAILS = [...new Set([...listFromEnv(process.env.ADMIN_EMAILS), "omidjr17@gmail.com"])];
 const ADMIN_USERNAMES = listFromEnv(process.env.ADMIN_USERNAMES, "@");
 
 export function isAdminEmail(email: string | null | undefined) {

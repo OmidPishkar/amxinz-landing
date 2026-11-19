@@ -6,6 +6,7 @@ import { getDb } from "@/lib/mongodb";
 import { classifySource, cleanRef, hostFromUrl } from "@/lib/analytics";
 import { getUserById } from "@/lib/users";
 import type { UserDoc } from "@/lib/types";
+import { attributeReferral } from "@/lib/referrals";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
 
     const body = await req.json().catch(() => null);
     const ref = cleanRef(body?.ref);
+    if (ref) await attributeReferral(session.user.id, ref);
     const host = hostFromUrl(body?.referrer);
     const { channel, source } = classifySource({ ref, referrerHost: host, siteHost: null });
     const path = typeof body?.path === "string" && body.path.startsWith("/") ? body.path.slice(0, 200) : null;

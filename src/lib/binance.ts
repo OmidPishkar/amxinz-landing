@@ -1,5 +1,7 @@
+import { createHash } from "node:crypto";
 import { HORIZON, VISIBLE_CANDLES } from "./game";
 import type { CandleDoc } from "./types";
+import { getDb } from "./mongodb";
 
 // Public market-data endpoints (no API key). The second host works where
 // api.binance.com is geo-blocked.
@@ -23,7 +25,7 @@ const STEP = 3600;
 
 const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
 
-interface RawCandle { open: number; high: number; low: number; close: number }
+interface RawCandle { time: number; open: number; high: number; low: number; close: number }
 
 async function fetchKlines(symbol: string, interval: string, startTime: number): Promise<RawCandle[]> {
   const qs = new URLSearchParams({
@@ -39,6 +41,7 @@ async function fetchKlines(symbol: string, interval: string, startTime: number):
       if (!res.ok) throw new Error(`Binance responded ${res.status}`);
       const rows = (await res.json()) as string[][];
       return rows.map((r) => ({
+        time: Number(r[0]),
         open: Number(r[1]), high: Number(r[2]), low: Number(r[3]), close: Number(r[4]),
       }));
     } catch (err) {
@@ -84,11 +87,54 @@ export async function buildRound() {
     return {
       symbol,
       interval: interval.id,
-      startTime,
+      startTime: raw[0].time,
       outcome: (endClose > lastClose ? "up" : "down") as "up" | "down",
       visible,
       future,
     };
   }
   throw new Error("Could not load market data from Binance");
+}
+
+
+/**
+ * Reserve each historical scenario globally so the main game, daily missions and
+ * user-created challenges do not reuse the same exact market window.
+ */
+export async function buildUniqueRound(source: "main" | "daily" | "challenge" | "personal" | "risk-lab") {
+  const db = await getDb();
+  const usage = db.collection("scenario_usage");
+  await Promise.all([
+    usage.createIndex({ scenarioKey: 1 }, { unique: true }),
+    usage.createIndex({ symbol: 1, interval: 1, patternKey: 1 }, { unique: true }),
+    usage.createIndex({ symbol: 1, interval: 1, timeBucket: 1 }, { unique: true }),
+  ]);
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const round = await buildRound();
+    const interval = INTERVALS.find((item) => item.id === round.interval);
+    if (!interval) continue;
+    const windowMs = interval.ms * TOTAL;
+    const pattern = round.visible.map((candle, index) => {
+      if (index === 0) return "start";
+      const previous = round.visible[index - 1].close;
+      const bodyPct = previous ? ((candle.close - previous) / previous) * 100 : 0;
+      const rangePct = previous ? ((candle.high - candle.low) / previous) * 100 : 0;
+      return Math.round(bodyPct / 0.1) + ":" + Math.round(rangePct / 0.1);
+    }).join("|");
+    const patternKey = createHash("sha256").update(pattern).digest("hex").slice(0, 24);
+    const timeBucket = Math.floor(round.startTime / (windowMs * 2));
+    const overlap = await usage.findOne({
+      symbol: round.symbol, interval: round.interval,
+      startTime: { $gte: round.startTime - windowMs, $lte: round.startTime + windowMs },
+    });
+    if (overlap) continue;
+    const scenarioKey = `${round.symbol}:${round.interval}:${round.startTime}`;
+    try {
+      await usage.insertOne({ scenarioKey, symbol: round.symbol, interval: round.interval, startTime: round.startTime, timeBucket, patternKey, source, createdAt: new Date() });
+      return round;
+    } catch (error) {
+      if ((error as { code?: number })?.code !== 11000) throw error;
+    }
+  }
+  throw new Error("Could not reserve a unique historical scenario with a sufficiently distinct pattern.");
 }

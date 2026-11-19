@@ -69,12 +69,11 @@ export function Analytics({ loggedIn }: { loggedIn: boolean }) {
     try {
       if (localStorage.getItem(CLAIMED)) return;
       const first = JSON.parse(localStorage.getItem(FIRST_TOUCH) ?? "{}");
-      localStorage.setItem(CLAIMED, "1");
-      send("/api/track/attribute", { ref: first.ref ?? null, referrer: first.referrer ?? "", path: first.path ?? null });
-    } catch {
-      /* best effort */
-    }
-  }, [loggedIn]);
+      fetch("/api/track/attribute", { method: "POST", body: JSON.stringify({ ref: first.ref ?? null, referrer: first.referrer ?? "", path: first.path ?? null }), keepalive: true, headers: { "Content-Type": "application/json" } })
+        .then((response) => { if (response.ok) localStorage.setItem(CLAIMED, "1"); })
+        .catch(() => undefined);
+    } catch { /* best effort; retry on the next route change */ }
+  }, [loggedIn, pathname]);
 
   return null;
 }

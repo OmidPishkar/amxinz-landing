@@ -1,0 +1,26 @@
+"use client";
+import { useCallback,useEffect,useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { CandleChart,type Candle } from "@/components/game/candle-chart";
+type Result={choice:"up"|"down";correct:boolean;outcome:"up"|"down";future:Candle[];reveal:{symbol:string;interval:string;startTime:number}};
+type Scenario={index:number;interval:string;candles:Candle[];answered:boolean;result?:Result};
+type State={date:string;completed:boolean;answered:number;xp:number;level:number;streak:number;scenarios:Scenario[]};
+export function DailyMission(){
+ const [state,setState]=useState<State|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [reward,setReward]=useState(0);
+ const load=useCallback(async()=>{setError("");const r=await fetch("/api/daily-mission",{cache:"no-store"});const d=await r.json();if(!r.ok)throw new Error(d.error??"Could not load the mission.");setState(d);},[]);
+ useEffect(()=>{void load().catch(e=>setError(e instanceof Error?e.message:"Could not load the mission."));},[load]);
+ const active=state?.scenarios.find(s=>!s.answered);
+ async function answer(direction:"up"|"down"){if(!active||busy)return;setBusy(true);setError("");try{const r=await fetch("/api/daily-mission/answer",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({index:active.index,choice:direction})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error??"Could not save your answer.");setReward(d.awardedXp??0);setState(s=>s?{...s,answered:d.answered,completed:d.completed,scenarios:s.scenarios.map(x=>x.index===active.index?{...x,answered:true,result:{choice:direction,correct:d.correct,outcome:d.outcome,future:d.future,reveal:d.reveal}}:x),xp:s.xp+(d.awardedXp??0),level:d.level??s.level,streak:d.streak??s.streak}:s);}catch(e){setError(e instanceof Error?e.message:"Could not save your answer.");}finally{setBusy(false);}}
+ if(error&&!state)return <div className="rounded-xl border p-5"><p className="text-sm text-red-600">{error}</p><Button className="mt-3" onClick={()=>void load()}>Try again</Button></div>;
+ if(!state)return <div className="rounded-xl border p-8 text-center text-sm text-muted-foreground">Loading today's mission…</div>;
+ const current=active??state.scenarios[state.scenarios.length-1];const candles=current?.result?[...current.candles,...current.result.future]:current?.candles??[];const markerTime=current?.candles[current.candles.length-1]?.time;
+ const rewardText=reward>0?"You earned "+reward+" XP.":"Your completion reward has already been recorded.";
+ return <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">Daily Mission · UTC {state.date}</p><h2 className="mt-1 text-2xl font-semibold">Five decisions. One shared challenge.</h2></div><div className="text-right text-sm"><p className="font-semibold">{state.answered}/5 complete</p><p className="text-xs text-muted-foreground">{state.xp} XP · Level {state.level} · {state.streak}-day streak</p></div></div>
+ <div className="flex gap-2">{state.scenarios.map(s=><div key={s.index} className={"h-2 flex-1 rounded-full "+(s.answered?"bg-violet-600":"bg-muted")}/>)}</div>
+ {state.completed&&<div className="rounded-xl border p-5"><p className="font-semibold">Daily Mission complete</p><p className="mt-1 text-sm text-muted-foreground">{rewardText}</p><p className="mt-2 text-sm">Current streak: {state.streak} days.</p></div>}
+ {current&&<section className="rounded-2xl border p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-sm font-semibold">Scenario {current.index+1} of 5</p><p className="text-xs text-muted-foreground">Asset hidden · {current.interval} interval · historical data</p></div><span className="rounded-full border px-3 py-1 text-xs">{current.answered?"Revealed":"Future candles hidden"}</span></div><div className="mt-4 h-72 sm:h-96"><CandleChart candles={candles} markerTime={markerTime}/></div>
+ {current.answered&&current.result?<div className="mt-4 rounded-lg bg-muted p-4"><p className="font-semibold">{current.result.correct?"Correct decision":"Incorrect decision"}</p><p className="mt-1 text-sm text-muted-foreground">You chose {current.result.choice.toUpperCase()}; the outcome was {current.result.outcome.toUpperCase()}. {current.result.reveal.symbol} · {new Date(current.result.reveal.startTime).toLocaleDateString("en-GB",{timeZone:"UTC"})}</p></div>:<><p className="mt-4 text-sm text-muted-foreground">Will the price be higher or lower after the hidden candles?</p><div className="mt-3 grid grid-cols-2 gap-3"><Button disabled={busy} onClick={()=>void answer("up")}>Up</Button><Button disabled={busy} variant="outline" onClick={()=>void answer("down")}>Down</Button></div></>}
+ </section>}
+ {error&&<p role="alert" className="text-sm text-red-600">{error}</p>}<div className="flex flex-wrap gap-3 text-sm"><Link href="/skills" className="text-violet-600 underline">View Skill Assessment</Link><Link href="/personal-missions" className="text-violet-600 underline">Personal Missions</Link></div></div>;
+}

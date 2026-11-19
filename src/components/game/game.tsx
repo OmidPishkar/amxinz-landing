@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CandleChart, type Candle } from "./candle-chart";
 import { AdBreak } from "./ad-break";
 import { LoginDialog } from "@/components/login-dialog";
-import { AD_PROVIDER } from "@/lib/ads";
+import { HAS_IFRAME_AD } from "@/lib/ads";
 import { AD_EVERY_PREDICTIONS, HORIZON } from "@/lib/game";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +38,7 @@ function formatDate(ms: number) {
   });
 }
 
-export function Game({ initialStats, guest = false }: { initialStats: Stats; guest?: boolean }) {
+export function Game({ initialStats, guest = false, showAds = true }: { initialStats: Stats; guest?: boolean; showAds?: boolean }) {
   const [stats, setStats] = useState(initialStats);
   const [round, setRound] = useState<Round | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -119,7 +119,7 @@ export function Game({ initialStats, guest = false }: { initialStats: Stats; gue
   // The next chart loads in the background while the ad is on screen.
   function next() {
     const adDue =
-      AD_PROVIDER !== "none" &&
+      showAds && HAS_IFRAME_AD &&
       stats.played > 0 &&
       stats.played % AD_EVERY_PREDICTIONS === 0 &&
       adShownAt.current !== stats.played;

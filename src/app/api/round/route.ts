@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
-import { buildRound } from "@/lib/binance";
+import { buildUniqueRound } from "@/lib/binance";
 import { clientIp } from "@/lib/client-ip";
 import { rateLimit } from "@/lib/rate-limit";
 import type { RoundDoc } from "@/lib/types";
@@ -26,7 +26,7 @@ async function handle(req: Request) {
   }
 
   try {
-    const round = await buildRound();
+    const round = await buildUniqueRound("main");
     const db = await getDb();
     const rounds = db.collection<Omit<RoundDoc, "_id">>("rounds");
 
@@ -40,6 +40,7 @@ async function handle(req: Request) {
       interval: round.interval,
       startTime: round.startTime,
       outcome: round.outcome,
+      visible: round.visible,
       future: round.future,
       answered: false,
       createdAt: new Date(),

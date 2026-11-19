@@ -10,6 +10,9 @@ import { siteSchema } from "@/lib/schema";
 import { Analytics } from "@/components/analytics";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getEntitlement } from "@/lib/subscriptions";
+import { AdFrame } from "@/components/ad-frame";
+import { HAS_IFRAME_AD } from "@/lib/ads";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
@@ -31,7 +34,7 @@ export const metadata: Metadata = {
   authors: [{ name: SITE.name, url: SITE_URL }],
   creator: SITE.name,
   publisher: SITE.name,
-  category: "games",
+  category: "education",
   referrer: "origin-when-cross-origin",
   formatDetection: { email: false, address: false, telephone: false },
   robots: {
@@ -53,6 +56,8 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
+  const entitlement = session?.user?.id ? await getEntitlement(session.user.id) : null;
+  const showSiteAds = HAS_IFRAME_AD && (!session?.user?.id || !entitlement?.isAdFree);
   return (
     <html lang={SITE.language} suppressHydrationWarning>
       <body className={`${inter.variable} flex min-h-screen flex-col font-sans`}>
@@ -67,6 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main id="main" className="flex-1">
             {children}
           </main>
+          {showSiteAds && <div className="mx-auto w-full max-w-5xl px-4 pb-6" aria-label="Advertisement"><p className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground">Advertisement</p><AdFrame loading="lazy" /></div>}
           <Footer />
         </ThemeProvider>
         <Analytics loggedIn={!!session?.user?.id} />

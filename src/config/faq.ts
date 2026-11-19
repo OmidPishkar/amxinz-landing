@@ -1,33 +1,18 @@
-import { ADS_ENABLED } from "@/lib/ads";
-import { AD_EVERY_PREDICTIONS, HORIZON, POINTS_CORRECT, VISIBLE_CANDLES } from "@/lib/game";
-
-// Shown on the landing page AND emitted as FAQPage structured data,
-// so the markup always matches the visible content.
-export const FAQ = [
-  {
-    q: "Is Amxinz free to play?",
-    a: ADS_ENABLED
-      ? `Yes. Playing is free and there is nothing to deposit. A full-screen ad appears after every ${AD_EVERY_PREDICTIONS} predictions to cover running costs.`
-      : "Yes. Playing is free, there is nothing to deposit, and there are no ads.",
-  },
-  {
-    q: "Are the charts real?",
-    a: `Yes. Every round loads ${VISIBLE_CANDLES} real candles from Binance market data. The asset, the date and the price level stay hidden until you answer, so the chart can't be looked up.`,
-  },
-  {
-    q: "How is my score calculated?",
-    a: `You predict whether the close ${HORIZON} candles after the last visible candle will be higher or lower. A correct call earns ${POINTS_CORRECT} points and a wrong call costs ${POINTS_CORRECT}. Your total score decides your rank on the leaderboard.`,
-  },
-  {
-    q: "Do I need an account to play?",
-    a: "No. You can play rounds right away as a guest. Log in to save your score, appear on the leaderboard and join challenges against other players.",
-  },
-  {
-    q: "Do I need a crypto wallet to play?",
-    a: "No. You can log in with Google, or sign a message with an EVM wallet such as MetaMask. Signing never sends a transaction and costs no gas.",
-  },
-  {
-    q: "Is this financial advice?",
-    a: "No. Amxinz is a practice game for learning to read charts. Past patterns do not guarantee future results, and nothing here is investment advice.",
-  },
+import { HORIZON,POINTS_CORRECT,VISIBLE_CANDLES } from "@/lib/game";
+export const FAQ=[
+ {q:"What is Amxinz?",a:"Amxinz is a trading practice arena. It helps you train chart reading, make decisions with future candles hidden, review outcomes and build evidence about your skills. It is not a broker or exchange."},
+ {q:"Is Amxinz free?",a:"Yes. Guests and Free accounts can use core practice features with A-ADS-supported advertising. Essential, Pro, Elite and active 14-day trial accounts are ad-free."},
+ {q:"Are the charts real market data?",a:"The Main Game and challenge scenarios use historical Binance candlestick market data. The asset and date are hidden while you make your prediction, then revealed with the outcome."},
+ {q:"How does the Daily Mission work?",a:"Each UTC day, Amxinz prepares five historical chart scenarios. Every participant receives the same five scenarios in the same order. Your answer is saved before the future candles are revealed, and completion can earn 50 XP."},
+ {q:"How is my Main Game score calculated?",a:`Each round shows ${VISIBLE_CANDLES} historical candles. Predict whether the close ${HORIZON} candles after the visible chart will be higher or lower. A correct call earns ${POINTS_CORRECT} points; an incorrect call loses points. Your legacy Game Score is separate from XP and Skill Rating.`},
+ {q:"What is Skill Assessment?",a:"Skill Assessment analyzes recorded practice evidence across Trend Identification, Market Structure, Support & Resistance, Breakout Recognition, Reversal Recognition, Momentum Analysis and Risk Management. A rating appears only after at least 10 relevant samples; confidence grows at 25 and 50 samples."},
+ {q:"How do Personal Missions work?",a:"When your Skill Assessment has enough evidence, Personal Missions select unused historical scenarios for a skill area that currently needs the most work. If there is not enough evidence or suitable data, Amxinz will say so instead of inventing a rating or mission."},
+ {q:"What is the Risk Lab?",a:"Risk Lab is a historical simulation. Choose Long or Short, set a stop-loss and take-profit, then review how that plan would have behaved as future candles are revealed. It does not place real trades."},
+ {q:"What do XP and streaks measure?",a:"XP and Levels reward valid practice actions and completed missions. A Daily Streak advances when you complete a valid activity on a new UTC day, not when you merely log in. XP is separate from your Main Game score."},
+ {q:"What is included in the 14-day trial?",a:"After verifying your email, an eligible account can start one 14-day trial with access to all paid features. The trial is available once per account and does not require payment details. When it ends, the account returns to Free and its saved data remains."},
+ {q:"How do subscriptions work?",a:"Essential, Pro and Elite are prepaid plans priced in USD for 7 days, 1, 3, 6 or 12 months. Payments are made in USDT (BEP-20) on BNB Smart Chain. The invoice locks the amount and the subscription activates after on-chain verification and 60 confirmations."},
+ {q:"Do I need MetaMask to play?",a:"No. You can play as a guest or sign in with Google or an EVM wallet. A wallet is only needed if you choose to pay with a BEP-20 token; signing in with a wallet is a message signature and does not send a transaction."},
+ {q:"How does the referral program work?",a:"A referred new user receives 10% off their first paid subscription. After that user verifies their email, completes their first Daily Mission and makes their first successful subscription payment, the inviter receives seven days of Pro credit. Self-referrals and duplicate rewards are excluded."},
+ {q:"Are advertisements shown to subscribers?",a:"A-ADS placements may be shown to guests and Free accounts. An active paid subscription or active trial suppresses Amxinz ad placements, including the iframe request."},
+ {q:"Is Amxinz financial advice?",a:"No. Amxinz is an educational practice platform. Simulated and historical results do not predict future market performance and are not investment advice."}
 ];

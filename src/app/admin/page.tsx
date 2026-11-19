@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isAdminSession } from "@/lib/admin";
+import { AdminToolsNav } from "@/components/admin/admin-tools-nav";
 import { SITE_URL } from "@/config/site";
 import { addDays, dayStr, startOfDay } from "@/lib/day";
 import {
@@ -149,6 +150,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </Link>
         ))}
       </nav>
+      <AdminToolsNav />
 
       {tab !== "users" && (
         <div className="mt-4 flex flex-wrap items-center gap-3">

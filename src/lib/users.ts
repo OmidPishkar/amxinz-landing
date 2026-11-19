@@ -27,3 +27,10 @@ export async function getUserByUsername(username: string) {
   const db = await getDb();
   return db.collection<UserDoc>("users").findOne({ username });
 }
+
+/** Only explicitly public profiles are eligible for the public sitemap. */
+export async function listPublicUsernames() {
+  const db = await getDb();
+  return db.collection<UserDoc>("users").find({ profilePublic: true, username: { $type: "string" } })
+    .project<{ username: string; createdAt: Date }>({ username: 1, createdAt: 1 }).limit(10000).toArray();
+}

@@ -25,6 +25,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { isAdminSession } from "@/lib/admin";
 import { ordinal } from "@/lib/format";
+import { getEntitlement, PLAN_CATALOG } from "@/lib/subscriptions";
+import { getUserProgress } from "@/lib/progress";
 import type { DateRange } from "@/lib/profile";
 
 export const dynamic = "force-dynamic";
@@ -129,13 +131,15 @@ export default async function ProfilePage({
   const isActivePreset = (preset: { from: string; to: string }) => preset.from === fromStr && preset.to === toStr;
 
   await finalizeEndedChallenges();
-  const [admin, { rows, total, pages, page }, form, perf, activity, badges] = await Promise.all([
+  const [admin, { rows, total, pages, page }, form, perf, activity, badges, entitlement, progress] = await Promise.all([
     isAdminSession(session),
     getPredictionPage(session.user.id, requestedPage, filter, range),
     getRecentForm(session.user.id),
     getPerformanceStats(session.user.id),
     getChallengeActivity(session.user.id),
     getBadgesForUsers([session.user.id]),
+    getEntitlement(session.user.id),
+    getUserProgress(session.user.id),
   ]);
 
   const bestAssetLabel = perf.bestAsset
@@ -171,6 +175,11 @@ export default async function ProfilePage({
         Signed in with {user.provider === "google" ? "Google" : "a wallet"} as {user.name}
         {user.username ? <> · <span className="text-foreground">@{user.username}</span></> : null}.
       </p>
+      <section className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border p-4"><p className="text-xs text-muted-foreground">Current plan</p><p className="mt-1 text-lg font-semibold">{PLAN_CATALOG[entitlement.planId].name}</p><p className="mt-1 text-xs text-muted-foreground">{entitlement.isTrial ? "14-day trial" : entitlement.isAdFree ? "Ad-free access" : "Free · A-ADS supported"}</p>{entitlement.currentPeriodEnd ? <p className="mt-2 text-sm">Time remaining: <strong>{Math.max(0,Math.ceil((new Date(entitlement.currentPeriodEnd).getTime()-Date.now())/86400000))} days</strong></p> : null}<Link href="/pricing" className="mt-3 inline-block text-xs font-semibold text-violet-600">Manage plan →</Link></div>
+        <div className="rounded-xl border p-4"><p className="text-xs text-muted-foreground">Progression</p><div className="mt-2 grid grid-cols-3 gap-2"><div><p className="text-xl font-semibold tabular-nums">{progress.xp}</p><p className="text-[11px] text-muted-foreground">XP</p></div><div><p className="text-xl font-semibold tabular-nums">{progress.level}</p><p className="text-[11px] text-muted-foreground">Level</p></div><div><p className="text-xl font-semibold tabular-nums">{progress.streak}</p><p className="text-[11px] text-muted-foreground">Day streak</p></div></div></div>
+      </section>
+      <nav aria-label="Practice tools" className="mt-4 flex flex-wrap gap-2">{[["Daily Mission","/daily-mission"],["Skill Assessment","/skills"],["Risk Lab","/risk-lab"],["Personal Missions","/personal-missions"],["Weekly Report","/reports/weekly"],["Referrals","/referrals"]].map(([label,href])=><Button key={href} asChild variant="outline" size="sm"><Link href={href}>{label}</Link></Button>)}</nav>
 
       {banner && (
         <p

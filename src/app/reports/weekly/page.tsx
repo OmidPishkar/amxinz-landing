@@ -1,0 +1,18 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getEntitlement } from "@/lib/subscriptions";
+import { getWeeklyReport } from "@/lib/reports";
+export const dynamic="force-dynamic";
+export const metadata:Metadata={title:"Weekly Report · Amxinz",robots:{index:false,follow:false}};
+export default async function WeeklyReportPage(){
+ const session=await getServerSession(authOptions);if(!session?.user?.id)redirect("/");
+ const entitlement=await getEntitlement(session.user.id);
+ if(!["pro","elite"].includes(entitlement.planId))return <div className="mx-auto max-w-2xl px-4 py-16 text-center"><h1 className="text-3xl font-semibold">Weekly Reports</h1><p className="mt-3 text-sm text-muted-foreground">Weekly performance comparisons are available on Pro and Elite plans.</p><Link href="/pricing" className="mt-6 inline-flex rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white">Explore plans</Link></div>;
+ const report=await getWeeklyReport(session.user.id);const delta=report.current.accuracy!==null&&report.previous.accuracy!==null?Math.round((report.current.accuracy-report.previous.accuracy)*10)/10:null;
+ const cards=[["Main Game predictions",report.current.played,"Previous: "+report.previous.played],["Daily Mission answers",report.activity.dailyMission.current,"Previous: "+report.activity.dailyMission.previous],["Personal Mission answers",report.activity.personalMission.current,"Previous: "+report.activity.personalMission.previous],["Risk Lab plans",report.activity.riskLab.current,"Previous: "+report.activity.riskLab.previous],["Main Game accuracy",report.current.accuracy===null?"—":report.current.accuracy+"%","Previous: "+(report.previous.accuracy===null?"—":report.previous.accuracy+"%")],["Accuracy change",delta===null?"—":(delta>0?"+":"")+delta+" pp","Requires activity in both periods"]];
+ return <div className="mx-auto max-w-4xl px-4 py-12"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">Performance review</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Weekly Report</h1><p className="mt-2 text-sm text-muted-foreground">Last 7 days compared with the previous 7 days · generated {report.generatedAt.toLocaleString("en-GB")}</p><div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{cards.map(([label,value,note])=><div key={label} className="rounded-xl border p-4"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p><p className="mt-1 text-xs text-muted-foreground">{note}</p></div>)}</div>
+ <section className="mt-8"><h2 className="text-lg font-semibold">Skill activity</h2><div className="mt-3 divide-y rounded-xl border">{report.skills.map(s=><div key={s.id} className="flex flex-wrap items-center justify-between gap-3 p-4"><div><p className="font-medium">{s.name}</p><p className="text-xs text-muted-foreground">{s.samples} relevant samples this week</p></div><div className="text-right"><p className="font-semibold">{s.accuracy===null?"—":s.accuracy+"%"}</p><p className="text-xs text-muted-foreground">{s.change===null?"No comparable prior sample":(s.change>0?"+":"")+s.change+" pp vs previous week"}</p></div></div>)}</div></section><p className="mt-8 text-xs text-muted-foreground">Main Game accuracy is shown separately. Skill activity includes evidence from eligible practice and Risk Lab decisions. This report is not a prediction of future trading performance.</p></div>;
+}

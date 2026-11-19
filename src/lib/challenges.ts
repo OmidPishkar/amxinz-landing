@@ -1,7 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { ObjectId } from "mongodb";
 import { getDb } from "./mongodb";
-import { buildRound } from "./binance";
+import { buildUniqueRound } from "./binance";
+import { detectScenarioSkills } from "./skills";
+import { awardXp } from "./progress";
 import { CHALLENGE_SIZE, POINTS_CORRECT, POINTS_WRONG } from "./game";
 import type { CandleDoc, ChallengeDoc, ChallengeEntryDoc, ChallengeItem, UserDoc } from "./types";
 
@@ -45,7 +47,7 @@ export async function createChallenge(input: {
   isPublic: boolean;
 }): Promise<ChallengeDoc> {
   // Every player gets these same charts. Built once, up front, from real Binance data.
-  const rounds = await Promise.all(Array.from({ length: CHALLENGE_SIZE }, () => buildRound()));
+  const rounds = await Promise.all(Array.from({ length: CHALLENGE_SIZE }, () => buildUniqueRound("challenge")));
   const items: ChallengeItem[] = rounds.map((r) => ({
     symbol: r.symbol,
     interval: r.interval,
@@ -155,6 +157,7 @@ export async function nextChart(code: string, userId: string): Promise<NextResul
   if (!entry) return { status: "error", code: 500, error: "Could not start the challenge." };
 
   if (entry.finishedAt || entry.answers.length >= CHALLENGE_SIZE) {
+    try { await awardXp(userId, "challenge:" + code, 10); } catch (error) { console.error("challenge XP recovery:", error); }
     return { status: "finished", score: entry.score, correct: entry.correct, total: CHALLENGE_SIZE };
   }
 
@@ -221,6 +224,17 @@ export async function submitAnswer(
   );
   if (!updated) {
     return { ok: false, status: 409, error: "That chart was already answered. Reload to continue." };
+  }
+
+  const skillSignals = item.visible?.length ? detectScenarioSkills(item.visible) : [];
+  if (skillSignals.length) {
+    const skillEvents = (await getDb()).collection("skill_events");
+    await skillEvents.createIndex({ roundId: 1, skill: 1 }, { unique: true });
+    await skillEvents.insertMany(skillSignals.map((signal) => ({ userId, roundId: "challenge:" + code + ":" + userId + ":" + index, skill: signal.skill, correct, quality: signal.quality, createdAt: now })), { ordered: false }).catch((error) => { if ((error as { code?: number })?.code !== 11000) throw error; });
+  }
+  if (finishing) {
+    try { await awardXp(userId, "challenge:" + code, 10); }
+    catch (error) { console.error("challenge XP:", error); }
   }
 
   return {

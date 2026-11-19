@@ -7,6 +7,8 @@ import { clientIp } from "@/lib/client-ip";
 import { rateLimit } from "@/lib/rate-limit";
 import { recordEvent } from "@/lib/analytics";
 import { POINTS_CORRECT, POINTS_WRONG } from "@/lib/game";
+import { recordRoundSkills } from "@/lib/skills";
+import { awardXp } from "@/lib/progress";
 import type { RoundDoc, UserDoc } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +63,11 @@ async function handle(req: Request) {
     { $inc: { score: delta, played: 1, correct: correct ? 1 : 0 } },
     { returnDocument: "after" },
   );
+
+  if (user) {
+    try { await recordRoundSkills(round, userId, round._id.toString(), correct); } catch (error) { console.error("skill event recording:", error); }
+    try { await awardXp(userId, "round:" + round._id.toString(), 1); } catch (error) { console.error("XP award:", error); }
+  }
 
   return NextResponse.json({
     correct,
