@@ -82,7 +82,21 @@ export async function startFreeTrial(userId: string) {
   const user = await db.collection<UserDoc>("users").findOne({ _id: new ObjectId(userId) });
   if (!user || user.emailVerified !== true) return { ok: false as const, reason: "email" as const };
   const now = new Date();
-  if ((await getEntitlement(userId)).isAdFree) return { ok: false as const, reason: "active" as const };
+  // Do not rely on getEntitlement() here: it intentionally fails closed for ad
+  // display and returns a Free-shaped result when MongoDB is unavailable.
+  // Trial eligibility is an authorization decision, so database read errors must
+  // propagate instead of accidentally granting a trial over a paid subscription.
+  const existingSubscription = await db.collection<SubscriptionDoc>("subscriptions").findOne({ userId });
+  const hasActivePeriod = existingSubscription?.periods?.some((period) =>
+    ["active", "trialing", "cancelled"].includes(period.status) &&
+    new Date(period.currentPeriodStart).getTime() <= now.getTime() &&
+    new Date(period.currentPeriodEnd).getTime() > now.getTime()
+  ) ?? (
+    !!existingSubscription &&
+    ["active", "trialing", "cancelled"].includes(existingSubscription.status) &&
+    new Date(existingSubscription.currentPeriodEnd).getTime() > now.getTime()
+  );
+  if (hasActivePeriod) return { ok: false as const, reason: "active" as const };
   const claims = db.collection("trial_claims");
   await claims.createIndex({ userId: 1 }, { unique: true });
   try {
