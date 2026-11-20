@@ -59,7 +59,7 @@ export async function withUserSubscriptionLock<T>(userId: string, work: () => Pr
   for (let attempt = 0; attempt < 25; attempt += 1) {
     const now = new Date();
     try {
-      await locks.insertOne({ userId, owner, expiresAt: new Date(now.getTime() + 90_000) });
+      await locks.insertOne({ userId, owner, expiresAt: new Date(now.getTime() + 180_000) });
       acquired = true;
       break;
     } catch (error) {
