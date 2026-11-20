@@ -295,7 +295,7 @@ export async function reviewInvoiceManually(invoiceId: string, actor: string, de
   const invoices = db.collection<InvoiceDoc>("invoices");
   const initial = await invoices.findOne({ invoiceId });
   if (!initial) throw new Error("Invoice not found.");
-  return withUserSubscriptionLock(initial.userId, async () => {
+  const result = await withUserSubscriptionLock(initial.userId, async () => {
     const invoice = await invoices.findOne({ invoiceId });
     if (!invoice) throw new Error("Invoice not found.");
     if (invoice.status === "paid" || invoice.status === "rejected") throw new Error("This invoice has already been finalized.");
@@ -327,9 +327,6 @@ export async function reviewInvoiceManually(invoiceId: string, actor: string, de
       if (finalized.modifiedCount !== 1) throw new Error("Invoice review lock expired. Please retry.");
       const after = { status: finalStatus, reviewedAt };
       await db.collection("admin_audit_logs").insertOne({ actor, at: reviewedAt, action: decision === "approve" ? "invoice.approved" : "invoice.rejected", targetType: "invoice", targetId: invoiceId, before, after, reason });
-      if (decision === "approve") {
-        try { await markReferralPaid(invoice.userId); } catch (error) { console.error("manual referral trigger:", error); }
-      }
       return after;
     } catch (error) {
       await invoices.updateOne(
@@ -339,4 +336,8 @@ export async function reviewInvoiceManually(invoiceId: string, actor: string, de
       throw error;
     }
   });
+  if (decision === "approve") {
+    try { await markReferralPaid(initial.userId); } catch (error) { console.error("manual referral trigger:", error); }
+  }
+  return result;
 }
