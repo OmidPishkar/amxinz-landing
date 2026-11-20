@@ -57,7 +57,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   const entitlement = session?.user?.id ? await getEntitlement(session.user.id) : null;
-  const showSiteAds = HAS_IFRAME_AD && (!session?.user?.id || !entitlement?.isAdFree);
+  const showSiteAds = HAS_IFRAME_AD && (!session?.user?.id || (!!entitlement && !entitlement.isAdFree && !entitlement.adsSuppressedOnError));
   return (
     <html lang={SITE.language} suppressHydrationWarning>
       <body className={`${inter.variable} flex min-h-screen flex-col font-sans`}>
