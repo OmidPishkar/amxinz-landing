@@ -210,7 +210,7 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
 
   // Sum all matching Transfer events. A transaction may contain multiple
   // transfers to the recipient; inspecting only the last event can misclassify it.
-  let receivedRaw = 0n;
+  let receivedRaw = BigInt(0);
   for (const log of receipt.logs) {
     if (getAddress(log.address) !== PAYMENT_TOKEN) continue;
     try {
@@ -224,7 +224,7 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
       }
     } catch { /* Ignore unrelated token logs. */ }
   }
-  if (receivedRaw === 0n) throw new Error("No matching token transfer to the Amxinz payment wallet was found.");
+  if (receivedRaw === BigInt(0)) throw new Error("No matching token transfer to the Amxinz payment wallet was found.");
   const expected = BigInt(invoice.amountRaw);
   if (receivedRaw < expected) {
     const claimed = await invoices.updateOne({ invoiceId, userId, status: { $in: ["pending", "confirming"] }, $or: [{ txHash: { $exists: false } }, { txHash }] }, { $set: { status: "underpaid", txHash } });
