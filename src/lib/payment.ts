@@ -186,6 +186,9 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
   if (!invoice) throw new Error("Invoice not found.");
   if (invoice.status === "rejected") throw new Error("This invoice was rejected during manual review.");
   if (invoice.status === "paid") {
+    if (!invoice.txHash || invoice.txHash.toLowerCase() !== txHash) {
+      throw new Error("This invoice was paid with a different transaction hash.");
+    }
     try { await markReferralPaid(userId); } catch (error) { console.error("referral paid trigger:", error); }
     return { status: "paid" as const, confirmations: invoice.confirmations ?? PAYMENT_CONFIRMATIONS };
   }
