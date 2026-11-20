@@ -208,31 +208,37 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
   if (Number(tx.chainId) !== BSC_CHAIN_ID) throw new Error("Transaction was not sent on BNB Smart Chain.");
   if (getAddress(tx.from) !== getAddress(invoice.payerAddress)) throw new Error("The transaction sender does not match the wallet entered for this invoice.");
 
-  let transfer: { from: string; to: string; value: bigint } | null = null;
+  // Sum all matching Transfer events. A transaction may contain multiple
+  // transfers to the recipient; inspecting only the last event can misclassify it.
+  let receivedRaw = 0n;
   for (const log of receipt.logs) {
     if (getAddress(log.address) !== PAYMENT_TOKEN) continue;
     try {
       const parsed = TRANSFER.parseLog({ topics: [...log.topics], data: log.data });
       if (parsed?.name === "Transfer") {
-        const candidate = { from: getAddress(String(parsed.args.from)), to: getAddress(String(parsed.args.to)), value: BigInt(parsed.args.value) };
-        if (candidate.to === PAYMENT_RECIPIENT && candidate.from === getAddress(invoice.payerAddress)) transfer = candidate;
+        const from = getAddress(String(parsed.args.from));
+        const to = getAddress(String(parsed.args.to));
+        if (to === PAYMENT_RECIPIENT && from === getAddress(invoice.payerAddress)) {
+          receivedRaw += BigInt(parsed.args.value);
+        }
       }
     } catch { /* Ignore unrelated token logs. */ }
   }
-  if (!transfer) throw new Error("No matching token transfer to the Amxinz payment wallet was found.");
+  if (receivedRaw === 0n) throw new Error("No matching token transfer to the Amxinz payment wallet was found.");
   const expected = BigInt(invoice.amountRaw);
-  if (transfer.value < expected) {
+  if (receivedRaw < expected) {
     const claimed = await invoices.updateOne({ invoiceId, userId, status: { $in: ["pending", "confirming"] }, $or: [{ txHash: { $exists: false } }, { txHash }] }, { $set: { status: "underpaid", txHash } });
     if (claimed.matchedCount !== 1) throw new Error("Invoice state changed while recording the underpayment. Please retry.");
     return { status: "underpaid" as const, confirmations: 0 };
   }
-  if (transfer.value > expected) {
+  if (receivedRaw > expected) {
     const claimed = await invoices.updateOne({ invoiceId, userId, status: { $in: ["pending", "confirming"] }, $or: [{ txHash: { $exists: false } }, { txHash }] }, { $set: { status: "manual_review", txHash } });
     if (claimed.matchedCount !== 1) throw new Error("Invoice state changed while recording the overpayment. Please retry.");
     return { status: "manual_review" as const, confirmations: 0 };
   }
   const block = await rpc.getBlock(receipt.blockNumber);
-  if (block && block.timestamp * 1000 > invoice.expiresAt.getTime()) {
+  if (!block) throw new Error("Could not confirm the transaction block timestamp. Please retry verification.");
+  if (block.timestamp * 1000 > invoice.expiresAt.getTime()) {
     const claimed = await invoices.updateOne({ invoiceId, userId, status: { $in: ["pending", "confirming"] }, $or: [{ txHash: { $exists: false } }, { txHash }] }, { $set: { status: "manual_review", txHash } });
     if (claimed.matchedCount !== 1) throw new Error("Invoice state changed while recording the late payment. Please retry.");
     return { status: "manual_review" as const, confirmations: 0 };
@@ -310,6 +316,12 @@ export async function reviewInvoiceManually(invoiceId: string, actor: string, de
     if (claimed.modifiedCount !== 1) throw new Error("Another administrator is already reviewing this invoice.");
     const before = { status: invoice.status, txHash: invoice.txHash ?? null, amountUsd: invoice.amountUsd, confirmations: invoice.confirmations ?? 0 };
     try {
+      // If an earlier approval appended the subscription but crashed before the
+      // invoice was finalized, never allow a later rejection to leave paid access
+      // attached to a rejected invoice. Re-approve to complete the idempotent flow.
+      if (decision === "reject" && await db.collection<SubscriptionDoc>("subscriptions").findOne({ userId: invoice.userId, "periods.invoiceId": invoiceId })) {
+        throw new Error("This invoice already has an activated subscription period. Approve it to complete the interrupted review.");
+      }
       if (decision === "approve") {
         if (!invoice.txHash) throw new Error("An on-chain transaction hash is required before approval.");
         if (invoice.discountCode) {
@@ -326,7 +338,13 @@ export async function reviewInvoiceManually(invoiceId: string, actor: string, de
       );
       if (finalized.modifiedCount !== 1) throw new Error("Invoice review lock expired. Please retry.");
       const after = { status: finalStatus, reviewedAt };
-      await db.collection("admin_audit_logs").insertOne({ actor, at: reviewedAt, action: decision === "approve" ? "invoice.approved" : "invoice.rejected", targetType: "invoice", targetId: invoiceId, before, after, reason });
+      // Audit persistence must not turn a completed financial action into a
+      // reported failure; the invoice is already finalized at this point.
+      try {
+        await db.collection("admin_audit_logs").insertOne({ actor, at: reviewedAt, action: decision === "approve" ? "invoice.approved" : "invoice.rejected", targetType: "invoice", targetId: invoiceId, before, after, reason });
+      } catch (auditError) {
+        console.error("invoice review audit log:", auditError);
+      }
       return after;
     } catch (error) {
       await invoices.updateOne(
