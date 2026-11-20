@@ -76,7 +76,7 @@ export async function withUserSubscriptionLock<T>(userId: string, work: () => Pr
   try {
     return await work();
   } finally {
-    await locks.deleteOne({ userId, owner });
+    await locks.deleteOne({ userId, owner }).catch((error) => console.error("subscription lock release:", error));
   }
 }
 
@@ -113,6 +113,7 @@ export async function startFreeTrial(userId: string) {
   const db = await getDb();
   const user = await db.collection<UserDoc>("users").findOne({ _id: new ObjectId(userId) });
   if (!user || user.emailVerified !== true) return { ok: false as const, reason: "email" as const };
+  if (user.trialStartedAt) return { ok: false as const, reason: "used" as const };
   return withUserSubscriptionLock(userId, async () => {
     const now = new Date();
     // Do not rely on getEntitlement() here: it intentionally fails closed for ad
@@ -120,15 +121,16 @@ export async function startFreeTrial(userId: string) {
     // Trial eligibility is an authorization decision, so database read errors must
     // propagate instead of accidentally granting a trial over a paid subscription.
     const existingSubscription = await db.collection<SubscriptionDoc>("subscriptions").findOne({ userId });
-    const hasActivePeriod = existingSubscription?.periods?.some((period) =>
-      ["active", "trialing", "cancelled"].includes(period.status) &&
-      new Date(period.currentPeriodStart).getTime() <= now.getTime() &&
-      new Date(period.currentPeriodEnd).getTime() > now.getTime()
-    ) ?? (
-      !!existingSubscription &&
-      ["active", "trialing", "cancelled"].includes(existingSubscription.status) &&
-      new Date(existingSubscription.currentPeriodEnd).getTime() > now.getTime()
-    );
+    const hasActivePeriod = existingSubscription
+      ? existingSubscription.periods?.length
+        ? existingSubscription.periods.some((period) =>
+            ["active", "trialing", "cancelled"].includes(period.status) &&
+            new Date(period.currentPeriodStart).getTime() <= now.getTime() &&
+            new Date(period.currentPeriodEnd).getTime() > now.getTime()
+          )
+        : ["active", "trialing", "cancelled"].includes(existingSubscription.status) &&
+          new Date(existingSubscription.currentPeriodEnd).getTime() > now.getTime()
+      : false;
     if (hasActivePeriod) return { ok: false as const, reason: "active" as const };
     const claims = db.collection("trial_claims");
     await claims.createIndex({ userId: 1 }, { unique: true });
