@@ -90,8 +90,13 @@ export function Checkout({ plan, term }: { plan: Plan; term: Term }) {
       }
       setMessage("Your transaction is still confirming. You can keep this page open; the payment will activate after the required confirmations.");
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Payment could not be completed.");
-    } finally {
+  const rawMessage = reason instanceof Error ? reason.message : "";
+  const revertReason =
+    rawMessage.match(/reason="([^"]+)"/)?.[1] ??
+    rawMessage.match(/execution reverted:\s*"([^"]+)"/)?.[1];
+
+  setError(revertReason ?? rawMessage ?? "Payment could not be completed.");
+}finally {
       setBusy(false);
     }
   }
