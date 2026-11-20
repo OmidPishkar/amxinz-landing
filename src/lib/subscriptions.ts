@@ -46,7 +46,7 @@ export interface Entitlement {
   currentPeriodEnd: Date | null;
   daysRemaining: number;
   /** Suppress advertising if entitlement could not be checked; never show ads to a potentially paid user during a database outage. */
-  adsSuppressedOnError: boolean;
+  adsSuppressedOnError?: boolean;
 }
 const FREE: Entitlement = { planId: "free", status: "free", isAdFree: false, isTrial: false, currentPeriodEnd: null, daysRemaining: 0, adsSuppressedOnError: false };
 
