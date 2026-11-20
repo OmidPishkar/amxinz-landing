@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import type { UserDoc } from "@/lib/types";
@@ -48,6 +49,37 @@ export interface Entitlement {
   /** Suppress advertising if entitlement could not be checked; never show ads to a potentially paid user during a database outage. */
   adsSuppressedOnError?: boolean;
 }
+/** Serialize all subscription mutations for one user across serverless instances. */
+export async function withUserSubscriptionLock<T>(userId: string, work: () => Promise<T>): Promise<T> {
+  const db = await getDb();
+  const locks = db.collection<{ userId: string; owner: string; expiresAt: Date }>("subscription_locks");
+  await locks.createIndex({ userId: 1 }, { unique: true });
+  const owner = randomUUID();
+  let acquired = false;
+  for (let attempt = 0; attempt < 25; attempt += 1) {
+    const now = new Date();
+    try {
+      await locks.insertOne({ userId, owner, expiresAt: new Date(now.getTime() + 90_000) });
+      acquired = true;
+      break;
+    } catch (error) {
+      if ((error as { code?: number }).code !== 11000) throw error;
+      const takeover = await locks.updateOne(
+        { userId, expiresAt: { $lte: now } },
+        { $set: { owner, expiresAt: new Date(now.getTime() + 90_000) } },
+      );
+      if (takeover.modifiedCount === 1) { acquired = true; break; }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+  if (!acquired) throw new Error("A subscription update is already in progress. Please retry shortly.");
+  try {
+    return await work();
+  } finally {
+    await locks.deleteOne({ userId, owner });
+  }
+}
+
 const FREE: Entitlement = { planId: "free", status: "free", isAdFree: false, isTrial: false, currentPeriodEnd: null, daysRemaining: 0, adsSuppressedOnError: false };
 
 export async function getEntitlement(userId: string | null | undefined): Promise<Entitlement> {
@@ -81,44 +113,46 @@ export async function startFreeTrial(userId: string) {
   const db = await getDb();
   const user = await db.collection<UserDoc>("users").findOne({ _id: new ObjectId(userId) });
   if (!user || user.emailVerified !== true) return { ok: false as const, reason: "email" as const };
-  const now = new Date();
-  // Do not rely on getEntitlement() here: it intentionally fails closed for ad
-  // display and returns a Free-shaped result when MongoDB is unavailable.
-  // Trial eligibility is an authorization decision, so database read errors must
-  // propagate instead of accidentally granting a trial over a paid subscription.
-  const existingSubscription = await db.collection<SubscriptionDoc>("subscriptions").findOne({ userId });
-  const hasActivePeriod = existingSubscription?.periods?.some((period) =>
-    ["active", "trialing", "cancelled"].includes(period.status) &&
-    new Date(period.currentPeriodStart).getTime() <= now.getTime() &&
-    new Date(period.currentPeriodEnd).getTime() > now.getTime()
-  ) ?? (
-    !!existingSubscription &&
-    ["active", "trialing", "cancelled"].includes(existingSubscription.status) &&
-    new Date(existingSubscription.currentPeriodEnd).getTime() > now.getTime()
-  );
-  if (hasActivePeriod) return { ok: false as const, reason: "active" as const };
-  const claims = db.collection("trial_claims");
-  await claims.createIndex({ userId: 1 }, { unique: true });
-  try {
-    await claims.insertOne({ userId, claimedAt: now, expiresAt: new Date(now.getTime() + 3650 * 86400000) });
-  } catch (error) {
-    if ((error as { code?: number })?.code === 11000) return { ok: false as const, reason: "used" as const };
-    throw error;
-  }
-  const end = new Date(now.getTime() + 14 * 86400000);
-  const period: SubscriptionPeriod = { planId: "elite", status: "trialing", currentPeriodStart: now, currentPeriodEnd: end, startAt: now, endAt: end, createdAt: now, trial: true, invoiceId: "free-trial" };
-  try {
-    const subscriptions = db.collection<SubscriptionDoc>("subscriptions");
-    await subscriptions.createIndex({ userId: 1 }, { unique: true });
-    await subscriptions.updateOne(
-      { userId, "periods.invoiceId": { $ne: "free-trial" } },
-      { $set: { planId: "elite", status: "trialing", currentPeriodStart: now, currentPeriodEnd: end, createdAt: now, trial: true, cancelAtPeriodEnd: false }, $push: { periods: period } },
-      { upsert: true },
+  return withUserSubscriptionLock(userId, async () => {
+    const now = new Date();
+    // Do not rely on getEntitlement() here: it intentionally fails closed for ad
+    // display and returns a Free-shaped result when MongoDB is unavailable.
+    // Trial eligibility is an authorization decision, so database read errors must
+    // propagate instead of accidentally granting a trial over a paid subscription.
+    const existingSubscription = await db.collection<SubscriptionDoc>("subscriptions").findOne({ userId });
+    const hasActivePeriod = existingSubscription?.periods?.some((period) =>
+      ["active", "trialing", "cancelled"].includes(period.status) &&
+      new Date(period.currentPeriodStart).getTime() <= now.getTime() &&
+      new Date(period.currentPeriodEnd).getTime() > now.getTime()
+    ) ?? (
+      !!existingSubscription &&
+      ["active", "trialing", "cancelled"].includes(existingSubscription.status) &&
+      new Date(existingSubscription.currentPeriodEnd).getTime() > now.getTime()
     );
-    await db.collection<UserDoc>("users").updateOne({ _id: user._id }, { $set: { trialStartedAt: now } });
-    return { ok: true as const, currentPeriodEnd: end };
-  } catch (error) {
-    await claims.deleteOne({ userId, claimedAt: now });
-    throw error;
-  }
+    if (hasActivePeriod) return { ok: false as const, reason: "active" as const };
+    const claims = db.collection("trial_claims");
+    await claims.createIndex({ userId: 1 }, { unique: true });
+    try {
+      await claims.insertOne({ userId, claimedAt: now, expiresAt: new Date(now.getTime() + 3650 * 86400000) });
+    } catch (error) {
+      if ((error as { code?: number })?.code === 11000) return { ok: false as const, reason: "used" as const };
+      throw error;
+    }
+    const end = new Date(now.getTime() + 14 * 86400000);
+    const period: SubscriptionPeriod = { planId: "elite", status: "trialing", currentPeriodStart: now, currentPeriodEnd: end, startAt: now, endAt: end, createdAt: now, trial: true, invoiceId: "free-trial" };
+    try {
+      const subscriptions = db.collection<SubscriptionDoc>("subscriptions");
+      await subscriptions.createIndex({ userId: 1 }, { unique: true });
+      await subscriptions.updateOne(
+        { userId, "periods.invoiceId": { $ne: "free-trial" } },
+        { $set: { planId: "elite", status: "trialing", currentPeriodStart: now, currentPeriodEnd: end, createdAt: now, trial: true, cancelAtPeriodEnd: false }, $push: { periods: period } },
+        { upsert: true },
+      );
+      await db.collection<UserDoc>("users").updateOne({ _id: user._id }, { $set: { trialStartedAt: now } });
+      return { ok: true as const, currentPeriodEnd: end };
+    } catch (error) {
+      await claims.deleteOne({ userId, claimedAt: now });
+      throw error;
+    }
+  });
 }
