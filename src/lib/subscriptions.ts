@@ -66,7 +66,7 @@ export async function withUserSubscriptionLock<T>(userId: string, work: () => Pr
       if ((error as { code?: number }).code !== 11000) throw error;
       const takeover = await locks.updateOne(
         { userId, expiresAt: { $lte: now } },
-        { $set: { owner, expiresAt: new Date(now.getTime() + 90_000) } },
+        { $set: { owner, expiresAt: new Date(now.getTime() + 180_000) } },
       );
       if (takeover.modifiedCount === 1) { acquired = true; break; }
       await new Promise((resolve) => setTimeout(resolve, 100));
