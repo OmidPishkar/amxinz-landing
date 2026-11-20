@@ -1,21 +1,27 @@
 import { MongoClient } from "mongodb";
 
-// Cached on globalThis so hot reloads (dev) and warm serverless invocations reuse one connection.
+// Cache the connection promise across hot reloads and warm serverless invocations.
+// Clear a rejected promise so transient DNS/network failures can recover on the next request.
 const globalForMongo = globalThis as unknown as { _mongoClientPromise?: Promise<MongoClient> };
 
 function getClient(): Promise<MongoClient> {
   const uri = process.env.MONGODB_URI;
   if (!uri) throw new Error("MONGODB_URI is not set. Copy .env.example to .env.local.");
 
-  const cached = globalForMongo._mongoClientPromise;
-  if (cached) return cached;
+  if (globalForMongo._mongoClientPromise) return globalForMongo._mongoClientPromise;
 
   const created = new MongoClient(uri).connect();
   globalForMongo._mongoClientPromise = created;
+  created.catch(() => {
+    if (globalForMongo._mongoClientPromise === created) {
+      globalForMongo._mongoClientPromise = undefined;
+    }
+  });
   return created;
 }
 
 export async function getDb() {
   const client = await getClient();
-  return client.db("amxinz-landing");
+  const dbName = process.env.MONGODB_DB?.trim() || "amxinz";
+  return client.db(dbName);
 }
