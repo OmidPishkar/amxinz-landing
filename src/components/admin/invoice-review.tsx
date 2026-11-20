@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 export function InvoiceReview({invoiceId,status}:{invoiceId:string;status:string}){
  const [reason,setReason]=useState("");const [busy,setBusy]=useState(false);const [error,setError]=useState("");const router=useRouter();
- if(!["manual_review","underpaid","overpaid","confirming"].includes(status))return null;
+ if(!["manual_review","underpaid","overpaid","confirming","reviewing"].includes(status))return null;
  async function submit(decision:"approve"|"reject"){
   if(reason.trim().length<10){setError("Add a review reason of at least 10 characters.");return;}
   setBusy(true);setError("");
