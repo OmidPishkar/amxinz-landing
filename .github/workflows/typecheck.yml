@@ -1,4 +1,4 @@
-name: TypeScript checks
+name: CI checks
 
 on:
   push:
@@ -10,10 +10,17 @@ permissions:
   contents: read
 
 jobs:
-  typecheck:
-    name: TypeScript
+  verify:
+    name: TypeScript and production build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    env:
+      # Build-only placeholders: no production credentials or database writes.
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ci-build-only-not-a-production-secret
+      NEXT_PUBLIC_SITE_URL: https://amxinz.com
+      MONGODB_URI: mongodb://127.0.0.1:27017
+      MONGODB_DB: amxinz_ci
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -26,3 +33,5 @@ jobs:
         run: npm ci
       - name: Run TypeScript checks
         run: npm run typecheck
+      - name: Build production application
+        run: npm run build
