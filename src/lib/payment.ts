@@ -179,9 +179,6 @@ async function appendSubscriptionPeriodUnlocked(invoice: InvoiceDoc) {
   }
 }
 
-async function appendSubscriptionPeriod(invoice: InvoiceDoc) {
-  return withUserSubscriptionLock(invoice.userId, () => appendSubscriptionPeriodUnlocked(invoice));
-}
 
 export async function verifyInvoicePayment(userId: string, invoiceId: string, txHashInput: string) {
   if (!/^0x[a-fA-F0-9]{64}$/.test(txHashInput)) throw new Error("Enter a valid transaction hash.");
@@ -225,16 +222,19 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
   if (!transfer) throw new Error("No matching token transfer to the Amxinz payment wallet was found.");
   const expected = BigInt(invoice.amountRaw);
   if (transfer.value < expected) {
-    await invoices.updateOne({ invoiceId, userId }, { $set: { status: "underpaid", txHash } });
+    const claimed = await invoices.updateOne({ invoiceId, userId, status: { $in: ["pending", "confirming"] }, $or: [{ txHash: { $exists: false } }, { txHash }] }, { $set: { status: "underpaid", txHash } });
+    if (claimed.matchedCount !== 1) throw new Error("Invoice state changed while recording the underpayment. Please retry.");
     return { status: "underpaid" as const, confirmations: 0 };
   }
   if (transfer.value > expected) {
-    await invoices.updateOne({ invoiceId, userId }, { $set: { status: "manual_review", txHash } });
+    const claimed = await invoices.updateOne({ invoiceId, userId, status: { $in: ["pending", "confirming"] }, $or: [{ txHash: { $exists: false } }, { txHash }] }, { $set: { status: "manual_review", txHash } });
+    if (claimed.matchedCount !== 1) throw new Error("Invoice state changed while recording the overpayment. Please retry.");
     return { status: "manual_review" as const, confirmations: 0 };
   }
   const block = await rpc.getBlock(receipt.blockNumber);
   if (block && block.timestamp * 1000 > invoice.expiresAt.getTime()) {
-    await invoices.updateOne({ invoiceId, userId }, { $set: { status: "manual_review", txHash } });
+    const claimed = await invoices.updateOne({ invoiceId, userId, status: { $in: ["pending", "confirming"] }, $or: [{ txHash: { $exists: false } }, { txHash }] }, { $set: { status: "manual_review", txHash } });
+    if (claimed.matchedCount !== 1) throw new Error("Invoice state changed while recording the late payment. Please retry.");
     return { status: "manual_review" as const, confirmations: 0 };
   }
   try {
