@@ -45,8 +45,10 @@ export interface Entitlement {
   isTrial: boolean;
   currentPeriodEnd: Date | null;
   daysRemaining: number;
+  /** Suppress advertising if entitlement could not be checked; never show ads to a potentially paid user during a database outage. */
+  adsSuppressedOnError: boolean;
 }
-const FREE: Entitlement = { planId: "free", status: "free", isAdFree: false, isTrial: false, currentPeriodEnd: null, daysRemaining: 0 };
+const FREE: Entitlement = { planId: "free", status: "free", isAdFree: false, isTrial: false, currentPeriodEnd: null, daysRemaining: 0, adsSuppressedOnError: false };
 
 export async function getEntitlement(userId: string | null | undefined): Promise<Entitlement> {
   if (!userId) return FREE;
@@ -68,7 +70,9 @@ export async function getEntitlement(userId: string | null | undefined): Promise
     return { planId: sub.planId, status: sub.status === "trialing" || sub.trial ? "trialing" : "active", isAdFree: true, isTrial: sub.status === "trialing" || sub.trial === true, currentPeriodEnd: end, daysRemaining: Math.max(0, Math.ceil((end.getTime() - now) / 86400000)) };
   } catch (error) {
     console.error("getEntitlement:", error);
-    return FREE;
+    // A failed lookup must not expose an advertisement to a paying subscriber.
+    // Paid feature authorization still uses planId/status, so this does not grant premium access.
+    return { ...FREE, adsSuppressedOnError: true };
   }
 }
 
