@@ -231,10 +231,19 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
     return { status: "manual_review" as const, confirmations: 0 };
   }
   try {
-    await invoices.updateOne(
+    const claim = await invoices.updateOne(
       { invoiceId, userId, $or: [{ txHash: { $exists: false } }, { txHash }] },
       { $set: { txHash, status: "confirming", blockNumber: receipt.blockNumber } },
     );
+    // Two browser tabs can submit different transactions for the same invoice at once.
+    // Only the request that atomically claims the invoice may continue toward activation.
+    if (claim.matchedCount !== 1) {
+      const latest = await invoices.findOne({ invoiceId, userId });
+      if (latest?.txHash && latest.txHash.toLowerCase() !== txHash) {
+        throw new Error("A different transaction was attached to this invoice while verification was running.");
+      }
+      throw new Error("This invoice changed while the transaction was being verified. Please retry.");
+    }
   } catch (error) {
     if ((error as { code?: number })?.code === 11000) throw new Error("This transaction hash has already been used.");
     throw error;
