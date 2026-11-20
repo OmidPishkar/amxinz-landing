@@ -18,7 +18,7 @@ const ADMIN_EMAILS = [...new Set([...listFromEnv(process.env.ADMIN_EMAILS), "omi
 const ADMIN_USERNAMES = listFromEnv(process.env.ADMIN_USERNAMES, "@");
 
 export function isAdminEmail(email: string | null | undefined) {
-  return !!email && ADMIN_EMAILS.has(email.toLowerCase());
+  return !!email && ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
 export function isAdminUsername(username: string | null | undefined) {
