@@ -3,7 +3,7 @@ import { Contract, formatUnits, getAddress, Interface, isAddress, JsonRpcProvide
 import { getDb } from "@/lib/mongodb";
 import { markReferralPaid } from "@/lib/referrals";
 import { redeemDiscountCode, validateDiscountCode } from "@/lib/discounts";
-import { PLAN_CATALOG, TERM_DAYS, type PlanId, type SubscriptionDoc, type SubscriptionPeriod, type TermId } from "@/lib/subscriptions";
+import { PLAN_CATALOG, TERM_DAYS, withUserSubscriptionLock, type PlanId, type SubscriptionDoc, type SubscriptionPeriod, type TermId } from "@/lib/subscriptions";
 
 export const BSC_CHAIN_ID = 56;
 export const PAYMENT_CONFIRMATIONS = 60;
@@ -38,7 +38,9 @@ export interface InvoiceDoc {
   recipient: string;
   payerAddress: string;
   chainId: number;
-  status: "pending" | "confirming" | "paid" | "underpaid" | "overpaid" | "manual_review" | "expired" | "rejected";
+  status: "pending" | "confirming" | "reviewing" | "paid" | "underpaid" | "overpaid" | "manual_review" | "expired" | "rejected";
+  reviewLockId?: string;
+  reviewLockExpiresAt?: Date;
   createdAt: Date;
   expiresAt: Date;
   txHash?: string;
@@ -105,7 +107,7 @@ export async function createInvoice(userId: string, planId: Exclude<PlanId, "fre
   return invoice;
 }
 
-async function appendSubscriptionPeriod(invoice: InvoiceDoc) {
+async function appendSubscriptionPeriodUnlocked(invoice: InvoiceDoc) {
   const db = await getDb();
   const col = db.collection<SubscriptionDoc>("subscriptions");
   await col.createIndex({ userId: 1 }, { unique: true });
@@ -177,6 +179,10 @@ async function appendSubscriptionPeriod(invoice: InvoiceDoc) {
   }
 }
 
+async function appendSubscriptionPeriod(invoice: InvoiceDoc) {
+  return withUserSubscriptionLock(invoice.userId, () => appendSubscriptionPeriodUnlocked(invoice));
+}
+
 export async function verifyInvoicePayment(userId: string, invoiceId: string, txHashInput: string) {
   if (!/^0x[a-fA-F0-9]{64}$/.test(txHashInput)) throw new Error("Enter a valid transaction hash.");
   const txHash = txHashInput.toLowerCase();
@@ -185,6 +191,7 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
   const invoice = await invoices.findOne({ invoiceId, userId });
   if (!invoice) throw new Error("Invoice not found.");
   if (invoice.status === "rejected") throw new Error("This invoice was rejected during manual review.");
+  if (invoice.status === "reviewing") return { status: "manual_review" as const, confirmations: invoice.confirmations ?? 0 };
   if (invoice.status === "paid") {
     if (!invoice.txHash || invoice.txHash.toLowerCase() !== txHash) {
       throw new Error("This invoice was paid with a different transaction hash.");
@@ -232,7 +239,7 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
   }
   try {
     const claim = await invoices.updateOne(
-      { invoiceId, userId, $or: [{ txHash: { $exists: false } }, { txHash }] },
+      { invoiceId, userId, status: { $in: ["pending", "confirming"] }, $or: [{ txHash: { $exists: false } }, { txHash }] },
       { $set: { txHash, status: "confirming", blockNumber: receipt.blockNumber } },
     );
     // Two browser tabs can submit different transactions for the same invoice at once.
@@ -251,48 +258,85 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
   const head = await rpc.getBlockNumber();
   const confirmations = Math.max(0, head - receipt.blockNumber + 1);
   if (confirmations < PAYMENT_CONFIRMATIONS) {
-    await invoices.updateOne({ invoiceId, userId, txHash }, { $set: { status: "confirming", confirmations } });
+    await invoices.updateOne({ invoiceId, userId, txHash, status: "confirming" }, { $set: { status: "confirming", confirmations } });
     return { status: "confirming" as const, confirmations };
   }
-  const paidAt = new Date();
-  const current = await invoices.findOne({ invoiceId, userId });
-  if (!current) throw new Error("Invoice not found.");
-  if (current.discountCode) {
-    const redeemed = await redeemDiscountCode(invoiceId, current.discountCode);
-    if (!redeemed) {
-      await invoices.updateOne({ invoiceId, userId, txHash }, { $set: { status: "manual_review" } });
-      return { status: "manual_review" as const, confirmations };
+  const activation = await withUserSubscriptionLock(userId, async () => {
+    const current = await invoices.findOne({ invoiceId, userId });
+    if (!current) throw new Error("Invoice not found.");
+    if (current.status === "paid") return { status: "paid" as const, confirmations: current.confirmations ?? confirmations };
+    if (current.status === "reviewing" || current.status === "rejected" || current.status === "manual_review") return { status: "manual_review" as const, confirmations: current.confirmations ?? confirmations };
+    if (current.status !== "confirming" || current.txHash?.toLowerCase() !== txHash) throw new Error("Invoice state changed during payment verification. Please retry.");
+    if (current.discountCode) {
+      const redeemed = await redeemDiscountCode(invoiceId, current.discountCode);
+      if (!redeemed) {
+        await invoices.updateOne({ invoiceId, userId, txHash, status: "confirming" }, { $set: { status: "manual_review" } });
+        return { status: "manual_review" as const, confirmations };
+      }
     }
+    await appendSubscriptionPeriodUnlocked({ ...current, txHash });
+    const paidAt = new Date();
+    const paid = await invoices.updateOne({ invoiceId, userId, txHash, status: "confirming" }, { $set: { status: "paid", confirmations, paidAt } });
+    if (paid.modifiedCount !== 1) {
+      const latest = await invoices.findOne({ invoiceId, userId });
+      if (latest?.status !== "paid") throw new Error("Invoice could not be finalized. Please retry verification.");
+    }
+    return { status: "paid" as const, confirmations };
+  });
+  if (activation.status === "paid") {
+    try { await markReferralPaid(userId); } catch (error) { console.error("referral paid trigger:", error); }
   }
-  await appendSubscriptionPeriod({ ...current, txHash });
-  await invoices.updateOne({ invoiceId, userId, txHash }, { $set: { status: "paid", confirmations, paidAt } });
-  try { await markReferralPaid(userId); } catch (error) { console.error("referral paid trigger:", error); }
-  return { status: "paid" as const, confirmations };
+  return activation;
 }
 
 
 export async function reviewInvoiceManually(invoiceId: string, actor: string, decision: "approve" | "reject", reason: string) {
   const db = await getDb();
   const invoices = db.collection<InvoiceDoc>("invoices");
-  const invoice = await invoices.findOne({ invoiceId });
-  if (!invoice) throw new Error("Invoice not found.");
-  if (invoice.status === "paid" || invoice.status === "rejected") throw new Error("This invoice has already been finalized.");
-  if (!["manual_review", "underpaid", "overpaid", "confirming"].includes(invoice.status)) throw new Error("This invoice is not awaiting manual review.");
-  const before = { status: invoice.status, txHash: invoice.txHash ?? null, amountUsd: invoice.amountUsd, confirmations: invoice.confirmations ?? 0 };
-  const now = new Date();
-  if (decision === "approve") {
-    if (!invoice.txHash) throw new Error("An on-chain transaction hash is required before approval.");
-    if (invoice.discountCode) {
-      const redeemed = await redeemDiscountCode(invoiceId, invoice.discountCode);
-      if (!redeemed) throw new Error("The discount code limit was reached. Resolve the discount before approving this invoice.");
+  const initial = await invoices.findOne({ invoiceId });
+  if (!initial) throw new Error("Invoice not found.");
+  return withUserSubscriptionLock(initial.userId, async () => {
+    const invoice = await invoices.findOne({ invoiceId });
+    if (!invoice) throw new Error("Invoice not found.");
+    if (invoice.status === "paid" || invoice.status === "rejected") throw new Error("This invoice has already been finalized.");
+    const now = new Date();
+    const reviewable = ["manual_review", "underpaid", "overpaid", "confirming", "reviewing"];
+    if (!reviewable.includes(invoice.status)) throw new Error("This invoice is not awaiting manual review.");
+    const reviewId = randomUUID();
+    const claimed = await invoices.updateOne(
+      { invoiceId, status: invoice.status, $or: [{ reviewLockExpiresAt: { $exists: false } }, { reviewLockExpiresAt: { $lte: now } }] },
+      { $set: { status: "reviewing", reviewLockId: reviewId, reviewLockExpiresAt: new Date(now.getTime() + 120_000) } },
+    );
+    if (claimed.modifiedCount !== 1) throw new Error("Another administrator is already reviewing this invoice.");
+    const before = { status: invoice.status, txHash: invoice.txHash ?? null, amountUsd: invoice.amountUsd, confirmations: invoice.confirmations ?? 0 };
+    try {
+      if (decision === "approve") {
+        if (!invoice.txHash) throw new Error("An on-chain transaction hash is required before approval.");
+        if (invoice.discountCode) {
+          const redeemed = await redeemDiscountCode(invoiceId, invoice.discountCode);
+          if (!redeemed) throw new Error("The discount code limit was reached. Resolve the discount before approving this invoice.");
+        }
+        await appendSubscriptionPeriodUnlocked(invoice);
+      }
+      const reviewedAt = new Date();
+      const finalStatus = decision === "approve" ? "paid" : "rejected";
+      const finalized = await invoices.updateOne(
+        { invoiceId, status: "reviewing", reviewLockId: reviewId },
+        { $set: { status: finalStatus, ...(decision === "approve" ? { paidAt: reviewedAt } : {}), manualReview: { actor, reason, reviewedAt } }, $unset: { reviewLockId: "", reviewLockExpiresAt: "" } },
+      );
+      if (finalized.modifiedCount !== 1) throw new Error("Invoice review lock expired. Please retry.");
+      const after = { status: finalStatus, reviewedAt };
+      await db.collection("admin_audit_logs").insertOne({ actor, at: reviewedAt, action: decision === "approve" ? "invoice.approved" : "invoice.rejected", targetType: "invoice", targetId: invoiceId, before, after, reason });
+      if (decision === "approve") {
+        try { await markReferralPaid(invoice.userId); } catch (error) { console.error("manual referral trigger:", error); }
+      }
+      return after;
+    } catch (error) {
+      await invoices.updateOne(
+        { invoiceId, status: "reviewing", reviewLockId: reviewId },
+        { $set: { status: invoice.status }, $unset: { reviewLockId: "", reviewLockExpiresAt: "" } },
+      );
+      throw error;
     }
-    await appendSubscriptionPeriod(invoice);
-    await invoices.updateOne({ invoiceId }, { $set: { status: "paid", paidAt: now, manualReview: { actor, reason, reviewedAt: now } } });
-    try { await markReferralPaid(invoice.userId); } catch (error) { console.error("manual referral trigger:", error); }
-  } else {
-    await invoices.updateOne({ invoiceId }, { $set: { status: "rejected", manualReview: { actor, reason, reviewedAt: now } } });
-  }
-  const after = { status: decision === "approve" ? "paid" : "rejected", reviewedAt: now };
-  await db.collection("admin_audit_logs").insertOne({ actor, at: now, action: decision === "approve" ? "invoice.approved" : "invoice.rejected", targetType: "invoice", targetId: invoiceId, before, after, reason });
-  return after;
+  });
 }
