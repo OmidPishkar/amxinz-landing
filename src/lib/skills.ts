@@ -111,8 +111,8 @@ export async function getSkillReport(userId: string): Promise<SkillReportItem[]>
       const recentRate = recent.filter((r) => r.correct).length / recent.length * 100;
       improvement = Math.round((recentRate - firstRate) * 10) / 10;
       const recentValues = recent.map((r) => r.correct ? 1 : 0);
-      const mean = recentValues.reduce((a, b) => a + b, 0) / recentValues.length;
-      const variance = recentValues.reduce((a, b) => a + (b - mean) ** 2, 0) / recentValues.length;
+      const mean = recentValues.reduce<number>((a, b) => a + b, 0) / recentValues.length;
+      const variance = recentValues.reduce<number>((a, b) => a + (b - mean) ** 2, 0) / recentValues.length;
       const consistency = Math.max(0, 100 - Math.sqrt(variance) * 100);
       const improvementScore = Math.max(0, Math.min(100, 50 + improvement));
       rating = Math.round((accuracy ?? 0) * 0.6 + (quality / 5 * 100) * 0.15 + consistency * 0.15 + improvementScore * 0.1);
