@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
-import type { SubscriptionDoc, SubscriptionPeriod } from "@/lib/subscriptions";
+import { withUserSubscriptionLock, type SubscriptionDoc, type SubscriptionPeriod } from "@/lib/subscriptions";
 
 interface ReferralCodeDoc { userId: string; code: string; createdAt: Date }
 interface ReferralDoc {
@@ -52,7 +52,7 @@ export async function attributeReferral(referredUserId: string, rawCode: unknown
   }
 }
 
-async function grantProCredit(inviterId: string, referredUserId: string) {
+async function grantProCreditUnlocked(inviterId: string, referredUserId: string) {
   const db = await getDb();
   const col = db.collection<SubscriptionDoc>("subscriptions");
   await col.createIndex({ userId: 1 }, { unique: true });
@@ -77,6 +77,10 @@ async function grantProCredit(inviterId: string, referredUserId: string) {
     if ((error as { code?: number })?.code !== 11000) throw error;
     await col.updateOne(filter, { $set: { planId: "pro", status: "active", currentPeriodStart: start, currentPeriodEnd: end, trial: false }, $push: { periods: period } });
   }
+}
+
+async function grantProCredit(inviterId: string, referredUserId: string) {
+  return withUserSubscriptionLock(inviterId, () => grantProCreditUnlocked(inviterId, referredUserId));
 }
 
 async function tryReward(referral: ReferralDoc) {
