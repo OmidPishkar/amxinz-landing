@@ -25,7 +25,7 @@ The application uses the MongoDB database named `amxinz-landing`. Set `MONGODB_U
 
 ## Plans and billing
 Plans are priced in USD and paid in USDT (BEP-20) on BNB Smart Chain (chain ID 56). The payment flow creates a locked invoice, verifies the token transfer event, checks sender, recipient, token contract, amount and chain, and waits for 60 confirmations before activating a subscription.
-The configured token contract is the Binance-Peg BSC-USD / USDT BEP-20 contract. The application verifies its on-chain name, symbol and 18 decimals before creating or verifying an invoice. The receiver address is configured in `src/lib/payment.ts`.
+The configured token contract is the Binance-Peg BSC-USD / USDT BEP-20 contract. The application verifies its on-chain name, symbol and 18 decimals before creating or verifying an invoice. The receiver address is configured with the server-only `BSC_PAYMENT_RECIPIENT` environment variable.
 A compatible wallet and BNB for network gas are required to pay. Amxinz never requests or stores private keys or seed phrases. Prepaid plans do not auto-renew. A 14-day full-feature trial is available once per account after email verification.
 
 ## Advertising
@@ -33,7 +33,7 @@ A-ADS is the only advertising provider. Guest, Free and expired accounts may see
 Set `NEXT_PUBLIC_ADS_ENABLED=true`, `NEXT_PUBLIC_AD_IFRAME_URL` to the exact URL supplied by your A-ADS unit, and configure width and height. Keep the master switch false in local development if you do not want ads.
 
 ## Environment
-Important variables: `NEXT_PUBLIC_SITE_URL`, `MONGODB_URI`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, Google OAuth credentials, `RESEND_API_KEY`, `EMAIL_FROM`, `UPLOADTHING_TOKEN`, `ADMIN_EMAILS`, `BSC_RPC_URL`, `NEXT_PUBLIC_ADS_ENABLED` and `NEXT_PUBLIC_AD_IFRAME_URL`.
+Important variables: `NEXT_PUBLIC_SITE_URL`, `MONGODB_URI`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, Google OAuth credentials, `RESEND_API_KEY`, `EMAIL_FROM`, `UPLOADTHING_TOKEN`, `ADMIN_EMAILS`, `BSC_RPC_URL`, `BSC_PAYMENT_RECIPIENT`, `NEXT_PUBLIC_ADS_ENABLED` and `NEXT_PUBLIC_AD_IFRAME_URL`.
 The default admin email is `omidjr17@gmail.com`; it must be verified on the account. Admin access is checked server-side.
 
 ## SEO and deployment
