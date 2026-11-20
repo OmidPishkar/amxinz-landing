@@ -3,9 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { isAdminSession } from "@/lib/admin";
 import { reviewInvoiceManually } from "@/lib/payment";
+import { rateLimit } from "@/lib/rate-limit";
 export const dynamic="force-dynamic";
 export async function POST(req:Request){
  const session=await getServerSession(authOptions);if(!(await isAdminSession(session)))return NextResponse.json({error:"Forbidden."},{status:403});
+ try { if (!(await rateLimit("admin:invoice-review:"+String(session?.user?.id??session?.user?.email??"admin"), 30, 600))) return NextResponse.json({error:"Too many invoice review attempts. Please try again later."},{status:429}); } catch { return NextResponse.json({error:"Invoice review is temporarily unavailable."},{status:503}); }
  const body=await req.json().catch(()=>null);const invoiceId=typeof body?.invoiceId==="string"?body.invoiceId:"";const decision=body?.decision;const reason=typeof body?.reason==="string"?body.reason.trim():"";
  if(!invoiceId||!["approve","reject"].includes(decision)||reason.length<10||reason.length>500)return NextResponse.json({error:"Invoice, decision and a 10–500 character review reason are required."},{status:400});
  try{const result=await reviewInvoiceManually(invoiceId,session?.user?.email??session?.user?.id??"admin",decision,reason);return NextResponse.json({ok:true,result});}
