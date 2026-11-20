@@ -9,11 +9,9 @@ export const BSC_CHAIN_ID = 56;
 export const PAYMENT_CONFIRMATIONS = 60;
 export const PAYMENT_TOKEN = getAddress("0x55d398326f99059fF775485246999027B3197955");
 
-function getPaymentRecipient() {
+export function getPaymentRecipient(): string | null {
   const configured = process.env.BSC_PAYMENT_RECIPIENT?.trim();
-  if (!configured || !isAddress(configured)) {
-    throw new Error("BSC_PAYMENT_RECIPIENT must be configured with the BEP-20 receiving wallet address.");
-  }
+  if (!configured || !isAddress(configured)) return null;
   return getAddress(configured);
 }
 const TOKEN_DECIMALS = 18;
@@ -100,6 +98,7 @@ export async function createInvoice(userId: string, planId: Exclude<PlanId, "fre
   const amountUsd = Math.max(0, Math.round((originalAmountUsd - discountAmountUsd) * 100) / 100);
   const amountRaw = parseUnits(amountUsd.toFixed(2), TOKEN_DECIMALS).toString();
   const recipient = getPaymentRecipient();
+  if (!recipient) throw new Error("BSC_PAYMENT_RECIPIENT must be configured with the BEP-20 receiving wallet address.");
   const invoice: InvoiceDoc = {
     invoiceId, userId, planId, term, amountUsd, originalAmountUsd, discountAmountUsd, referralDiscountUsd, discountCode, discountPercent, amountRaw, amountToken: formatUnits(amountRaw, TOKEN_DECIMALS),
     tokenContract: PAYMENT_TOKEN, recipient, payerAddress: getAddress(payer),
