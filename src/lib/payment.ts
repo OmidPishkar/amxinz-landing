@@ -8,7 +8,14 @@ import { PLAN_CATALOG, TERM_DAYS, withUserSubscriptionLock, type PlanId, type Su
 export const BSC_CHAIN_ID = 56;
 export const PAYMENT_CONFIRMATIONS = 60;
 export const PAYMENT_TOKEN = getAddress("0x55d398326f99059fF775485246999027B3197955");
-export const PAYMENT_RECIPIENT = getAddress("0x9Db7fa0f5238f64CFBb2f7BbA62967825a896DA6");
+
+function getPaymentRecipient() {
+  const configured = process.env.BSC_PAYMENT_RECIPIENT?.trim();
+  if (!configured || !isAddress(configured)) {
+    throw new Error("BSC_PAYMENT_RECIPIENT must be configured with the BEP-20 receiving wallet address.");
+  }
+  return getAddress(configured);
+}
 const TOKEN_DECIMALS = 18;
 const TRANSFER = new Interface(["event Transfer(address indexed from,address indexed to,uint256 value)"]);
 const TOKEN_METADATA_ABI = ["function decimals() view returns (uint8)", "function symbol() view returns (string)", "function name() view returns (string)"];
@@ -92,9 +99,10 @@ export async function createInvoice(userId: string, planId: Exclude<PlanId, "fre
   }
   const amountUsd = Math.max(0, Math.round((originalAmountUsd - discountAmountUsd) * 100) / 100);
   const amountRaw = parseUnits(amountUsd.toFixed(2), TOKEN_DECIMALS).toString();
+  const recipient = getPaymentRecipient();
   const invoice: InvoiceDoc = {
     invoiceId, userId, planId, term, amountUsd, originalAmountUsd, discountAmountUsd, referralDiscountUsd, discountCode, discountPercent, amountRaw, amountToken: formatUnits(amountRaw, TOKEN_DECIMALS),
-    tokenContract: PAYMENT_TOKEN, recipient: PAYMENT_RECIPIENT, payerAddress: getAddress(payer),
+    tokenContract: PAYMENT_TOKEN, recipient, payerAddress: getAddress(payer),
     chainId: BSC_CHAIN_ID, status: "pending", createdAt: now, expiresAt: new Date(now.getTime() + 30 * 60 * 1000),
   };
   const col = db.collection<InvoiceDoc>("invoices");
@@ -218,7 +226,7 @@ export async function verifyInvoicePayment(userId: string, invoiceId: string, tx
       if (parsed?.name === "Transfer") {
         const from = getAddress(String(parsed.args.from));
         const to = getAddress(String(parsed.args.to));
-        if (to === PAYMENT_RECIPIENT && from === getAddress(invoice.payerAddress)) {
+        if (to === getAddress(invoice.recipient) && from === getAddress(invoice.payerAddress)) {
           receivedRaw += BigInt(parsed.args.value);
         }
       }
@@ -319,8 +327,17 @@ export async function reviewInvoiceManually(invoiceId: string, actor: string, de
       // If an earlier approval appended the subscription but crashed before the
       // invoice was finalized, never allow a later rejection to leave paid access
       // attached to a rejected invoice. Re-approve to complete the idempotent flow.
-      if (decision === "reject" && await db.collection<SubscriptionDoc>("subscriptions").findOne({ userId: invoice.userId, "periods.invoiceId": invoiceId })) {
-        throw new Error("This invoice already has an activated subscription period. Approve it to complete the interrupted review.");
+      if (decision === "reject") {
+        const [activatedPeriod, discountRedemption, discountCodeRedemption] = await Promise.all([
+          db.collection<SubscriptionDoc>("subscriptions").findOne({ userId: invoice.userId, "periods.invoiceId": invoiceId }),
+          db.collection("discount_redemptions").findOne({ invoiceId }),
+          invoice.discountCode
+            ? db.collection("discount_codes").findOne({ code: invoice.discountCode, redeemedInvoiceIds: invoiceId })
+            : Promise.resolve(null),
+        ]);
+        if (activatedPeriod || discountRedemption || discountCodeRedemption) {
+          throw new Error("This invoice already has an activated subscription period or consumed discount. Approve it to complete the interrupted review.");
+        }
       }
       if (decision === "approve") {
         if (!invoice.txHash) throw new Error("An on-chain transaction hash is required before approval.");
